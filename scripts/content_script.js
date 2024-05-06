@@ -164,17 +164,17 @@ const SHORTCUTS = {
         }
     },
     'T': {
-      keys: ['Shift', 'T'],
-      description: "Navigate to current day or week",
-      action: ({document}) => {
-          const selectors = ['#navigationDailyTextToday > a',]
+        keys: ['Shift', 'T'],
+        description: "Navigate to current day or week",
+        action: ({document}) => {
+            const selectors = ['#navigationDailyTextToday > a',]
 
-          return clickFirstFromList(selectors, document)
-      }
+            return clickFirstFromList(selectors, document)
+        }
     },
     '1': {
         keys: ['1'],
-        description: "Highlight yellow the selected text within the article",
+        description: "Highlight yellow",
         action: ({event, document}) => {
             event.preventDefault()
             event.stopPropagation()
@@ -184,17 +184,7 @@ const SHORTCUTS = {
     },
     '2': {
         keys: ['2'],
-        description: "Highlight blue the selected text within the article",
-        action: ({event, document}) => {
-            event.preventDefault()
-            event.stopPropagation()
-
-            return highlightWithColor(document, 'blue');
-        }
-    },
-    '3': {
-        keys: ['3'],
-        description: "Highlight green the selected text within the article",
+        description: "Highlight green",
         action: ({event, document}) => {
             event.preventDefault()
             event.stopPropagation()
@@ -202,14 +192,44 @@ const SHORTCUTS = {
             return highlightWithColor(document, 'green');
         }
     },
+    '3': {
+        keys: ['3'],
+        description: "Highlight blue",
+        action: ({event, document}) => {
+            event.preventDefault()
+            event.stopPropagation()
+
+            return highlightWithColor(document, 'blue');
+        }
+    },
     '4': {
         keys: ['4'],
-        description: "Highlight red the selected text within the article",
+        description: "Highlight purple",
+        action: ({event, document}) => {
+            event.preventDefault()
+            event.stopPropagation()
+
+            return highlightWithColor(document, 'purple');
+        }
+    },
+    '5': {
+        keys: ['4'],
+        description: "Highlight red",
         action: ({event, document}) => {
             event.preventDefault()
             event.stopPropagation()
 
             return highlightWithColor(document, 'red');
+        }
+    },
+    '6': {
+        keys: ['4'],
+        description: "Highlight orange",
+        action: ({event, document}) => {
+            event.preventDefault()
+            event.stopPropagation()
+
+            return highlightWithColor(document, 'orange');
         }
     },
     // 'P': {
@@ -262,11 +282,20 @@ const blurSearchField = () => {
     }, 100)
 }
 
+const COLORS = {
+    'yellow': '#FFF9BB',
+    'green': '#DBF2C8',
+    'blue': '#CBECFF',
+    'purple': '#E0D3EF',
+    'red': '#FACBDD',
+    'orange': '#FFDDC4',
+}
+
 const highlightSelection = (selection, color) => {
 
     const surroundElement = document.createElement('span')
     if (color) {
-        surroundElement.style.backgroundColor = color
+        surroundElement.style.backgroundColor = COLORS[color]
     }
 
     let validSelection = false
