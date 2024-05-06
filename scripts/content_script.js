@@ -163,6 +163,15 @@ const SHORTCUTS = {
             return clickFirstFromList(selectors, document);
         }
     },
+    'T': {
+      keys: ['Shift', 'T'],
+      description: "Navigate to current day or week",
+      action: ({document}) => {
+          const selectors = ['#navigationDailyTextToday > a',]
+
+          return clickFirstFromList(selectors, document)
+      }
+    },
     '1': {
         keys: ['1'],
         description: "Highlight yellow the selected text within the article",
@@ -203,10 +212,10 @@ const SHORTCUTS = {
             return highlightWithColor(document, 'red');
         }
     },
-    'P': {
-        keys: ['Shift', 'P'],
-        description: "Highlight yellow the selected text within the article",
-    }
+    // 'P': {
+    //     keys: ['Shift', 'P'],
+    //     description: "Audio controls",
+    // }
 }
 
 const loadSelections = () => {
