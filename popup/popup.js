@@ -27,7 +27,7 @@ const getSymbol = (key) => {
 
 const renderShortcuts = (shortcuts) => {
     let shortcutListHtml = ''
-    for (const [key, shortcut] of Object.entries(shortcuts)) {
+    for (const [, shortcut] of Object.entries(shortcuts)) {
         const keys = shortcut.keys.map(k => `<kbd>${getSymbol(k)}${k}</kbd>`).join(' ')
             shortcutListHtml +=`
             <div class="cell">

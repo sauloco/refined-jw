@@ -244,7 +244,7 @@ let clearPreventSearchFocus = () => {
 }
 
 
-const blurSearchField = (document) => {
+const blurSearchField = () => {
     setTimeout(() => {
         if (searchField) {
             searchField.blur()
@@ -279,7 +279,7 @@ const highlightSelection = (selection, color) => {
 
 const getUniqueSelector = (element) => {
     let parent = element.parentElement
-    let selector = ''
+    let selector;
     if (element.nodeType === Node.TEXT_NODE) {
         selector = parent.tagName.toLowerCase()
         parent = parent.parentElement

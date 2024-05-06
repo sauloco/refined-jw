@@ -261,7 +261,7 @@ a:active, input:active, select:active, textarea:active {outline: none;}
 /* close commented backslash hack */
 
 .notice, .alert {
-    margin-top: 0px;
+    margin-top: 0;
     padding: 5px;
 }
 .notice {
