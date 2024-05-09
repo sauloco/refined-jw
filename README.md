@@ -1,6 +1,15 @@
 # Refined JW
 
 [Get the Chrome Extension for Free](https://chromewebstore.google.com/detail/refined-jw/fbiababpnkmpllkemnmbfblkfngiekcd)
+> Please, make sure to share and rate the extension.
+
+[⭐️ Donate](https://donate.stripe.com/fZe00jejEh2MemQ4gh) 
+With a single donation you are helping me to keep this project alive. Adding new features and fixing issues.
+
+You can also help us by: 
+
+- [creating an issue](https://github.com/sauloco/refined-jw/issues)
+- [follow us on instagram](https://instagram.com/rusticit)
 
 Enhance jw.org and wol.jw.org navigation experience.
 
