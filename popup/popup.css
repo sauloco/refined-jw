@@ -25,60 +25,97 @@ If you want this size in pixels (px)	Declare this percent (%)
                   26	                        197
 */
 
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
 .cell {
     flex: 1;
     display: flex;
     width: 100%;
     gap: .5em;
+    padding-left: 1.5em;
+    padding-right: 1.5em;
     align-items: center;
+}
+
+.cell:last-of-type {
+    padding-bottom: 1.5em;
+}
+
+:root {
+    --color-background: #f1f1f1;
+    --color-border: #cccccc;
+    --color-text: #444;
+    --color-accent: #2c2c2c;
+    --kbd-color-background: #e5e5e5;
+    --kbd-color-border: #cccccc;
+    --kbd-color-text: #242424;
+}
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        --color-background: #242424;
+        --color-border: #2c2c2c;
+        --color-text: #f1f1f1;
+        --color-accent: #f1f1f1;
+        --kbd-color-background: #212121;
+        --kbd-color-border: #404040;
+        --kbd-color-text: #f1f1f1;
+    }
 
 }
 
-body{
-    font:13px/1.231 arial,helvetica,clean,sans-serif; /* YUI Font Reset */
+body {
+    font: 13px/1.231 arial, helvetica, clean, sans-serif; /* YUI Font Reset */
+
     height: 100%;
-    background: #fff;    /* not all browsers set white as the default background color  */
-    color: #444;         /* color is set to create not too much contrast with the background color */
-    line-height: 1.4;    /* line-height is to ensure that text is legible enough ( enough space between the lines) */
+    background: var(--color-background);
+    color: var(--color-text);
+    line-height: 1.4; /* line-height is to ensure that text is legible enough ( enough space between the lines) */
     min-width: 400px;
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
     padding: .5em;
+    margin: .5em;
+    gap: 1em;
 }
 
-select,input,button,textarea,button {
-    font:99% arial,helvetica,clean,sans-serif;
+select, input, button, textarea, button {
+    font: 99% arial, helvetica, clean, sans-serif;
 }
 
 table {
-    font-size:100%;
+    font-size: 100%;
     border-collapse: collapse;
     border-spacing: 0;
 }
 
-pre,code,kbd,samp,tt {
-    font-family:monospace;
-    *font-size:108%;
-    line-height:100%;
+pre, code, kbd, samp, tt {
+    font-family: monospace;
+    *font-size: 108%;
+    line-height: 100%;
 }
 
 /* YUI Base css http://developer.yahoo.com/yui/base/ */
 
 h1 {
     /*18px via YUI Fonts CSS foundation*/
-    font-size:138.5%;
+    font-size: 138.5%;
 }
 
 h2 {
     /*16px via YUI Fonts CSS foundation*/
-    font-size:123.1%;
+    font-size: 123.1%;
 }
 
 h3 {
     /*14px via YUI Fonts CSS foundation*/
-    font-size:108%;
+    font-size: 108%;
 }
 
 /* margin and padding values are reset for all these elements
@@ -89,30 +126,30 @@ body, p, dl, dt, dd, ul, ol, li, h1, h2, h3, h4, h5, h6, pre, code, form, fields
     padding: 0;
 }
 
-h1,h2,h3,h4,h5,h6,p,blockquote,ul,ol,dl {
+h1, h2, h3, h4, h5, h6, p, blockquote, ul, ol, dl {
     /* top & bottom margin based on font size */
-    margin:1em 0;
+    margin: 1em 0;
 }
 
-h1,h2,h3,h4,h5,h6,strong,th,dt,b {
+h1, h2, h3, h4, h5, h6, strong, th, dt, b {
     /*bringing boldness back to headers and the strong element*/
-    font-weight:bold;
+    font-weight: bold;
 }
 
-abbr,acronym {
+abbr, acronym {
     /*indicating to users that more info is available */
-    border-bottom:1px dotted #000;
-    cursor:help;
+    border-bottom: 1px dotted #000;
+    cursor: help;
 }
 
-em,blockquote, q, em, cite, dfn, i, cite, var, address {
+em, blockquote, q, em, cite, dfn, i, cite, var, address {
     /*bringing italics back */
-    font-style:italic;
+    font-style: italic;
 }
 
-ol,ul,dl {
+ol, ul, dl {
     /*bringing lists on to the page with breathing room */
-    margin-left:2em;
+    margin-left: 2em;
 }
 
 ol li {
@@ -127,22 +164,24 @@ ul li {
 
 dl dd {
     /*giving UL's LIs generated numbers*/
-    margin-left:1em;
+    margin-left: 1em;
 }
 
-th,td {
+th, td {
     /*borders and padding to make the table readable*/
-    border:1px solid #000;
-    padding:.5em;
+    border: 1px solid #000;
+    padding: .5em;
 }
 
 /* all th should be centered unless they are in tbody (table body) */
 th {
     /*distinguishing table headers from data cells*/
-    text-align:center;
+    text-align: center;
 }
 
-tbody th {text-align: left;}
+tbody th {
+    text-align: left;
+}
 
 /* caption and summary are very important for tabular data but because caption is nearly impossible to style across browsers many authors do not use it or use display:none to "hide" it (which is almost the same as not using it).
  * so to prevent such workaround, I am positioning this element off-screen
@@ -160,7 +199,9 @@ fieldset, img {
 
 /* to prevent a gap from showing below images in some browsers
  */
-img {vertical-align: top;}
+img {
+    vertical-align: top;
+}
 
 /* color is to make that element stands out (see color set via body)
  * padding is used so Internet Explorer does not cut-off descenders in letters like p, g, etc.)
@@ -173,20 +214,30 @@ legend {
 /* See Eric Meyer's article about Fixed Monospace Sizing
  * http://meyerweb.com/eric/thoughts/2010/02/12/fixed-monospace-sizing/
  */
-code {color: #06f;}
-code, pre {font-family: "Courier New", monospace, serif; font-size: 1em;}
+code {
+    color: #06f;
+}
+
+code, pre {
+    font-family: "Courier New", monospace, serif;
+    font-size: 1em;
+}
 
 /* to prevent some browsers from inserting quotes on "q" and "p" ("p" in blockquotes) */
-blockquote p:before, blockquote p:after, q:before, q:after {content: '';}
+blockquote p:before, blockquote p:after, q:before, q:after {
+    content: '';
+}
 
 ins {
     text-decoration: none;
     border-bottom: 3px double #333;
 }
 
-del {text-decoration: line-through;}
+del {
+    text-decoration: line-through;
+}
 
-abbr,acronym {
+abbr, acronym {
     border-bottom: 1px dotted #333;
     font-variant: normal;
 }
@@ -201,7 +252,9 @@ hr {
 
 /* line height helps to set the vertical alignment of radio buttons and check boxes (remember to group these in fieldsets)
  */
-fieldset {line-height: 1;}
+fieldset {
+    line-height: 1;
+}
 
 /* vertical alignment of checkboxes (a different value is served to IE 7)
  */
@@ -211,10 +264,14 @@ input[type="checkbox"] {
 }
 
 /* vertical alignment of radio buttons */
-input[type="radio"] {vertical-align: middle;}
+input[type="radio"] {
+    vertical-align: middle;
+}
 
 /* vertical alignment of input fields for IE 6 */
-input {_vertical-align: middle;}
+input {
+    _vertical-align: middle;
+}
 
 /* a specific font-size is set for these elements */
 input, button, textarea, select, optgroup, option {
@@ -241,9 +298,17 @@ input[type="button"],
  * outline:none used with the pseudo-class :active is to avoid the sticky outline when a user clicks on a link, but choose to not follow it
  * note that the last rule does not do anything in IE as this browser does not support "outline" (besides, it treats :active and :focus the same)
  */
-a:link, a:visited {color: #000;}
-a:focus,:focus {outline: 1px dotted #000;}
-a:active, input:active, select:active, textarea:active {outline: none;}
+a:link, a:visited {
+    color: #000;
+}
+
+a:focus, :focus {
+    outline: 1px dotted #000;
+}
+
+a:active, input:active, select:active, textarea:active {
+    outline: none;
+}
 
 /* slightly enhanced, universal clearfix hack */
 .grouped:after {
@@ -254,16 +319,27 @@ a:active, input:active, select:active, textarea:active {outline: none;}
     clear: both;
     height: 0;
 }
-.grouped { display: inline-block; }
+
+.grouped {
+    display: inline-block;
+}
+
 /* start commented backslash hack \*/
-* html .grouped { height: 1%; }
-.grouped { display: block; }
+* html .grouped {
+    height: 1%;
+}
+
+.grouped {
+    display: block;
+}
+
 /* close commented backslash hack */
 
 .notice, .alert {
     margin-top: 0;
     padding: 5px;
 }
+
 .notice {
     border: solid 1px #99cc99;
     background-color: #e2f9e3;
@@ -287,11 +363,11 @@ abbr {
 }
 
 input, textarea {
-    font-size:110%;
+    font-size: 110%;
 }
 
 select {
-    font-size:120%;
+    font-size: 120%;
 }
 
 input[type="text"]:focus,
@@ -299,7 +375,7 @@ input[type="password"]:focus,
 input[type="file"]:focus,
 input[type="email"]:focus,
 textarea:focus, select:focus {
-    border:2px solid #2c2c2c;
+    border: 2px solid #2c2c2c;
 }
 
 input[type="text"],
@@ -311,10 +387,10 @@ textarea, select {
     -moz-border-radius: 5px;
     -webkit-border-radius: 5px;
     border-radius: 5px;
-    border:2px solid #D2D1CF;
-    color:#555555;
+    border: 2px solid #D2D1CF;
+    color: #555555;
     outline: 0 none;
-    padding:5px;
+    padding: 5px;
 }
 
 form .input label {
@@ -330,29 +406,21 @@ form .input.text label {
 .field_with_errors input[type="file"],
 .field_with_errors textarea,
 .field_with_errors select {
-    border:2px solid #E0A7A7;
+    border: 2px solid #E0A7A7;
 }
+
 .field_with_errors input[type="text"]:focus,
 .field_with_errors input[type="password"]:focus,
 .field_with_errors input[type="file"]:focus,
 .field_with_errors textarea:focus {
-    border:2px solid #B22222;
+    border: 2px solid #B22222;
 }
 
 .field_with_errors .error {
     padding-left: 10px;
 }
 
-@media (prefers-color-scheme: dark) {
-    --kbd-color-background: #8c8c8c;
-    --kbd-color-border:     #404040;
-    --kbd-color-text:       #242424;
-}
-
 kbd {
-    --kbd-color-background: #e5e5e5;
-    --kbd-color-border:     #cccccc;
-    --kbd-color-text:       #242424;
 
     background-color: var(--kbd-color-background);
     color: var(--kbd-color-text);
@@ -380,6 +448,7 @@ kbd {
     top: -1px;
 
 }
+
 kbd:hover {
     box-shadow: 0 1px 0 0.5px var(--kbd-color-border);
     top: 1px;

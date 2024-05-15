@@ -1,7 +1,7 @@
 {
   "name": "Refined JW",
   "description": "Enhance your reading experience of JW official site and Watchtower Online Library (WOL) with Refined JW",
-  "version": "1.0",
+  "version": "1.1",
   "manifest_version": 3,
   "action": {
     "default_popup": "./popup/popup.html"
@@ -14,9 +14,26 @@
   },
   "content_scripts": [
     {
-      "matches": ["https://*.jw.org/*"],
+      "matches": [
+        "https://*.jw.org/*"
+      ],
       "run_at": "document_end",
-      "js": ["./scripts/content_script.js"]
+      "js": [
+        "./scripts/underscore-umd-min.js",
+        "./scripts/underscore.string.min.js",
+        "./scripts/porter.js",
+        "./scripts/sum.js",
+        "./scripts/content_script.js"
+      ],
+      "css": [
+        "./styles/content_script.css"
+      ]
     }
-  ]
+  ],
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "refinedjw@rusticit.com",
+      "strict_min_version": "42.0"
+    }
+  }
 }
