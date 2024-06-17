@@ -45,29 +45,104 @@
     --opposite-gray: var(--dark-gray);
 }
 
+.highlighted {
+    &.refined-jw-yellow-bg {
+        --bg-color: var(--yellow);
+        --shadow-color: var(--opposite-yellow)
+    }
 
-.refined-jw-yellow-bg {
-    background-color: var(--yellow);
+    &.refined-jw-green-bg {
+        --bg-color: var(--green);
+        --shadow-color: var(--opposite-green)
+    }
+
+    &.refined-jw-blue-bg {
+        --bg-color: var(--blue);
+        --shadow-color: var(--opposite-blue)
+    }
+
+    &.refined-jw-purple-bg {
+        --bg-color: var(--purple);
+        --shadow-color: var(--opposite-purple)
+    }
+
+    &.refined-jw-red-bg {
+        --bg-color: var(--red);
+        --shadow-color: var(--opposite-red)
+    }
+
+    &.refined-jw-orange-bg {
+        --bg-color: var(--orange);
+        --shadow-color: var(--opposite-orange)
+    }
+
+    background-color: var(--bg-color);
+
+    &:hover {
+        border-bottom: 1px solid var(--shadow-color);
+        cursor: pointer;
+    }
 }
 
-.refined-jw-green-bg {
-    background-color: var(--green);
-}
 
-.refined-jw-blue-bg {
-    background-color: var(--blue);
-}
+kbd {
 
-.refined-jw-purple-bg {
-    background-color: var(--purple);
-}
+    --bg-color: var(--kbd-color-background);
+    --border-color: var(--kbd-color-border);
+    --text-color: var(--kbd-color-border);
+    --shadow-color: var(--kbd-color-border);
 
-.refined-jw-red-bg {
-    background-color: var(--red);
-}
+    &.refined-jw-yellow-bg {
+        --bg-color: var(--yellow);
+        --border-color: var(--opposite-yellow);
+        --text-color: var(--opposite-yellow);
+        --shadow-color: var(--opposite-yellow);
+    }
 
-.refined-jw-orange-bg {
-    background-color: var(--orange);
+    &.refined-jw-green-bg {
+        --bg-color: var(--green);
+        --border-color: var(--opposite-green);
+        --text-color: var(--opposite-green);
+        --shadow-color: var(--opposite-green);
+    }
+
+    &.refined-jw-blue-bg {
+        --bg-color: var(--blue);
+        --border-color: var(--opposite-blue);
+        --text-color: var(--opposite-blue);
+        --shadow-color: var(--opposite-blue);
+    }
+
+    &.refined-jw-purple-bg {
+        --bg-color: var(--purple);
+        --border-color: var(--opposite-purple);
+        --text-color: var(--opposite-purple);
+        --shadow-color: var(--opposite-purple);
+    }
+
+    &.refined-jw-red-bg {
+        --bg-color: var(--red);
+        --border-color: var(--opposite-red);
+        --text-color: var(--opposite-red);
+        --shadow-color: var(--opposite-red);
+    }
+
+    &.refined-jw-orange-bg {
+        --bg-color: var(--orange);
+        --border-color: var(--opposite-orange);
+        --text-color: var(--opposite-orange);
+        --shadow-color: var(--opposite-orange);
+    }
+
+
+    &:hover {
+        box-shadow: 0 1px 0 0.5px var(--shadow-color);
+    }
+
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    border-color: var(--border-color);
+    box-shadow: 0 2px 0 1px var(--shadow-color);
 }
 
 .refined-jw-audio-rate {
@@ -78,7 +153,7 @@
     text-align: right;
     font-size: 80%;
     margin-top: 0.25em;
-    width: 100%;
+    width: fit-content;
     color: var(--gray);
     user-select: none;
     display: flex;
@@ -99,8 +174,29 @@
     text-decoration: underline;
 }
 
-.free-badge {
-    background-color: var(--link-color);
+.badge {
+
+    &.free {
+        --bg-color: var(--link-color);
+    }
+
+    &.version {
+        --bg-color: var(--purple);
+    }
+
+    &.stopwatch {
+        --bg-color: var(--blue);
+        pointer-events: auto !important;
+        cursor: pointer;
+        text-transform: none !important;
+        margin-right: auto !important;
+        margin-left: 0 !important;
+        margin-top: .25rem !important;
+        padding: .2rem !important;
+        display: inline !important;
+    }
+
+    background-color: var(--bg-color);
     font-size: 80%;
     text-decoration: none;
     display: inline-block;

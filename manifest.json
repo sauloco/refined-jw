@@ -1,7 +1,7 @@
 {
   "name": "Refined JW",
   "description": "Enhance your reading experience of JW official site and Watchtower Online Library (WOL) with Refined JW",
-  "version": "1.2",
+  "version": "1.3",
   "manifest_version": 3,
   "action": {
     "default_popup": "./popup/popup.html"
@@ -21,6 +21,7 @@
       "js": [
         "./scripts/underscore-umd-min.js",
         "./scripts/underscore.string.min.js",
+        "./popup/popup.js",
         "./scripts/porter.js",
         "./scripts/sum.js",
         "./scripts/content_script.js"

@@ -48,10 +48,10 @@ If you want this size in pixels (px)	Declare this percent (%)
 :root {
     --color-background: #f1f1f1;
     --color-border: #cccccc;
-    --color-text: #444;
+    --color-text: #8a8a8a;
     --color-accent: #2c2c2c;
     --kbd-color-background: #e5e5e5;
-    --kbd-color-border: #cccccc;
+    --kbd-color-border: #afafaf;
     --kbd-color-text: #242424;
 }
 
@@ -59,10 +59,10 @@ If you want this size in pixels (px)	Declare this percent (%)
     :root {
         --color-background: #242424;
         --color-border: #2c2c2c;
-        --color-text: #f1f1f1;
+        --color-text: #d2d2d2;
         --color-accent: #f1f1f1;
         --kbd-color-background: #212121;
-        --kbd-color-border: #404040;
+        --kbd-color-border: #d2d2d2;
         --kbd-color-text: #f1f1f1;
     }
 
@@ -83,6 +83,7 @@ body {
     padding: .5em;
     margin: .5em;
     gap: 1em;
+    user-select: none;
 }
 
 select, input, button, textarea, button {
@@ -144,7 +145,7 @@ abbr, acronym {
 
 em, blockquote, q, em, cite, dfn, i, cite, var, address {
     /*bringing italics back */
-    font-style: italic;
+    font-style: normal;
 }
 
 ol, ul, dl {
@@ -226,6 +227,16 @@ code, pre {
 /* to prevent some browsers from inserting quotes on "q" and "p" ("p" in blockquotes) */
 blockquote p:before, blockquote p:after, q:before, q:after {
     content: '';
+}
+
+blockquote {
+    margin: 0 !important;
+    padding: 1rem !important;
+    border-left: 5px solid var(--opposite-purple);
+    background-color: var(--purple);
+    color: var(--opposite-purple);
+    font-size: .8rem;
+    line-height: .8rem;
 }
 
 ins {
@@ -423,7 +434,7 @@ form .input.text label {
 kbd {
 
     background-color: var(--kbd-color-background);
-    color: var(--kbd-color-text);
+    color: var(--kbd-color-border);
 
     border-radius: 0.25rem;
 
@@ -452,4 +463,14 @@ kbd {
 kbd:hover {
     box-shadow: 0 1px 0 0.5px var(--kbd-color-border);
     top: 1px;
+}
+
+.version {
+    font-size: 80%;
+    text-transform: none !important;
+
+    position: absolute;
+    top: .5rem;
+    right: .5rem;
+
 }

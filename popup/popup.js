@@ -2,7 +2,8 @@ document.addEventListener('DOMContentLoaded', function () {
     chrome.tabs.query({active: true, currentWindow: true}, function (tabs) {
         chrome.tabs.sendMessage(tabs[0].id, {type: "request_shortcuts"}, function (shortcuts) {
             if (shortcuts) {
-                enableRefinedJW()
+                const manifest = chrome.runtime.getManifest();
+                enableRefinedJW(manifest.version)
                 renderShortcuts(shortcuts)
             }
         });
@@ -11,15 +12,16 @@ document.addEventListener('DOMContentLoaded', function () {
 
 
 const getSymbol = (key) => {
+    const isMac = navigator.userAgent.includes('Mac OS X')
     switch (key) {
         case 'Shift':
             return '⇧ '
         case 'Control':
-            return '⌃ '
+            return isMac ? '⌃ ' : 'Ctrl '
         case 'Alt':
-            return '⌥ '
+            return isMac ? '⌥ ' : 'Alt '
         case 'Meta':
-            return '⌘ '
+            return isMac ? '⌘ ' : 'Win '
         default:
             return ''
     }
@@ -46,11 +48,14 @@ const renderShortcuts = (shortcuts) => {
 
     const firstRowDescription = "Highlight with color"
     firstRow = `<div class="cell">${firstRow} ${firstRowDescription}</div>`
-    firstRow += `<blockquote class="cell note">Currently highlight support is very limited, you can only create highlights within the same pragraph or verse.</blockquote>`
+    firstRow += `<blockquote class="cell note">Currently highlight support is very limited, you can only create highlights within the same paragraph or verse.</blockquote>`
 
     document.querySelector('body').innerHTML += firstRow + shortcutListHtml
 }
 
-const enableRefinedJW = () => {
-    document.querySelector('h1').innerHTML = 'Refined JW is enabled'
+const enableRefinedJW = (version) => {
+    const title = document.querySelector('h1');
+    title.innerHTML = `Refined JW is enabled`
+    const versionEl = document.querySelector('.version');
+    versionEl.innerHTML = `v${version}`
 }

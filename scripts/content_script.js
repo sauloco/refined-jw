@@ -59,6 +59,12 @@ const loadSelections = () => {
             document.querySelector(selection.startElementSelector).innerHTML = selection.startElementInnerHTML
         }
     }
+
+    const selectionElements = document.querySelectorAll('.highlighted')
+
+    for (const selection of selectionElements) {
+        selection.addEventListener('click', deleteSelection)
+    }
 }
 
 const startShortcuts = () => {
@@ -82,8 +88,6 @@ const calculateSpeechTime = (value) => {
 
     const speechTimeInSeconds = Math.ceil(words.length / 140 * 60) // 140 average words per minute
 
-    console.log({speechTimeInSeconds, words, wordsLength: words.length})
-
     return speechTimeInSeconds
 }
 
@@ -92,6 +96,44 @@ const calculateSpeechTime = (value) => {
 * EVENT HANDLERS
 *
 * */
+
+const stopwatches = {};
+
+function createStopwatch(parent, id) {
+    let stopwatch = document.querySelector(`#stopwatch-${id}`);
+    if (!stopwatch) {
+        stopwatch = document.createElement('span')
+        stopwatch.classList.add('badge', 'stopwatch')
+        stopwatch.id = `stopwatch-${id}`
+    }
+
+    stopwatch.innerHTML = '⏱️ start'
+    stopwatch.title = 'Start Stopwatch'
+
+    parent.appendChild(stopwatch)
+
+    stopwatch.addEventListener('click', (evt) => {
+        const el = evt.target
+        const content = el.innerHTML;
+        if (content.includes('⏱️')) {
+            stopwatches[id] = startStopwatch(el)
+            el.title = 'Stop Stopwatch'
+        } else if (content.includes('⏹️')) {
+            clearInterval(stopwatches[id])
+            delete stopwatches[id]
+            el.innerHTML = content.replace('⏹️', '⏱️')
+            el.title = 'Start Stopwatch'
+        }
+    })
+}
+
+const startStopwatch = (el) => {
+    const startedAt = Date.now()
+    el.innerHTML = `⏹️ ${Math.floor((Date.now() - startedAt) / 1000)}s`
+    return setInterval(() => {
+        el.innerHTML = `⏹️ ${Math.floor((Date.now() - startedAt) / 1000)}s`
+    }, 1000)
+}
 
 function addCommentTime(comment, id) {
     const speechTime = calculateSpeechTime(comment)
@@ -105,13 +147,16 @@ function addCommentTime(comment, id) {
     }
     speechTimeElement.classList.remove('refined-jw-speech-time-long')
 
-    speechTimeElement.innerHTML = `comment time ${speechTime}s`
-    document.querySelector(`#${id}`).parentElement.appendChild(speechTimeElement)
+    speechTimeElement.innerHTML = `estimated time ${speechTime}s`
+    const speechParent = document.querySelector(`#${id}`).parentElement
+
+    createStopwatch(speechParent, id)
+    speechParent.appendChild(speechTimeElement)
 
     if (speechTime > 29) {
         speechTimeElement.classList.add('refined-jw-speech-time-long')
         const summarizeBtn = document.createElement('span')
-        summarizeBtn.innerHTML = '✨ summarize' + `<span class="free-badge">free</span>`
+        summarizeBtn.innerHTML = '✨ summarize' + `<span class="badge free">free</span>`
         summarizeBtn.classList.add('refined-jw-speech-time-summarize')
         summarizeBtn.addEventListener('click', summarizeComment)
         summarizeBtn.setAttribute('data-textarea-id', id)
@@ -231,12 +276,14 @@ function highlightWithColor(document, color) {
     const selection = document.getSelection()
 
 
-    const validSelection = highlightSelection(selection, color)
+    const selectionData = highlightSelection(selection, color)
 
-    if (!validSelection) {
+    if (!selectionData) {
         console.log('invalid selection')
         return false
     }
+
+    const { selection: validSelection, id} = selectionData
 
     const {
         startContainer,
@@ -244,6 +291,8 @@ function highlightWithColor(document, color) {
         startOffset,
         endOffset
     } = validSelection.getRangeAt(0)
+
+    validSelection.removeAllRanges()
 
 
     const range = document.createRange();
@@ -262,6 +311,7 @@ function highlightWithColor(document, color) {
         startElementInnerHTML,
         endElementSelector,
         endElementInnerHTML,
+        id
     })
 
     return false
@@ -308,6 +358,63 @@ const SHORTCUTS = {
             }
         }
     },
+    'W': {
+        keys: ['Shift', 'W'],
+        description: "Go to Bible",
+        action: ({event, document}) => {
+            const selectors = ['#menuBible > a']
+            return clickFirstFromList(selectors, document)
+        }
+    },
+    'E': {
+        keys: ['Shift', 'E'],
+        description: "Go to Publications",
+        action: ({event, document}) => {
+            const selectors = ['#menuPublications > a']
+            return clickFirstFromList(selectors, document)
+        }
+    },
+    'R': {
+        keys: ['Shift', 'R'],
+        description: "Go to Meetings",
+        action: ({event, document}) => {
+            const selectors = ['#menuToday > a']
+            return clickFirstFromList(selectors, document)
+        }
+    },
+    'T': {
+        keys: ['Shift', 'T'],
+        description: "Navigate to current day or week",
+        action: ({document}) => {
+            const selectors = ['#navigationDailyTextToday > a',]
+
+            return clickFirstFromList(selectors, document)
+        }
+    },
+    'A': {
+        keys: ['Shift', 'A'],
+        description: "Go to Home",
+        action: ({event, document}) => {
+            const selectors = ['#menuHome > a']
+            return clickFirstFromList(selectors, document)
+        }
+    },
+    'S': {
+        keys: ['Shift', 'S'],
+        description: "Share",
+        action: ({event, document}) => {
+            const selectors = ['#shareButtonFooter']
+            return clickFirstFromList(selectors, document)
+        }
+    },
+    'L': {
+        keys: ['Shift', 'L'],
+        description: "Go to Languages",
+        action: ({event, document}) => {
+            const selectors = ['#libraryTitle > a']
+            return clickFirstFromList(selectors, document)
+        }
+    },
     'B': {
         keys: ['Shift', 'B'],
         description: "Navigate to previous article, week or day",
@@ -338,15 +445,6 @@ const SHORTCUTS = {
                 '#article > div.articleFooterLinks.cms-clearfix > nav > div > div:nth-child(3) > a', // next chapter JW
             ]
             return clickFirstFromList(selectors, document);
-        }
-    },
-    'T': {
-        keys: ['Shift', 'T'],
-        description: "Navigate to current day or week",
-        action: ({document}) => {
-            const selectors = ['#navigationDailyTextToday > a',]
-
-            return clickFirstFromList(selectors, document)
         }
     },
     '1': {
@@ -419,6 +517,14 @@ const SHORTCUTS = {
             event.stopPropagation()
 
             return highlightWithColor(document, 'orange');
+        }
+    },
+    ',': {
+        keys: [','],
+        description: "Go to Settings",
+        action: ({event, document}) => {
+            const selectors = ['#menuToolsPreferences > a']
+            return clickFirstFromList(selectors, document)
         }
     },
     '.': {
@@ -640,14 +746,30 @@ const blurSearchField = () => {
         }
     }, 100)
 }
+const deleteSelection = (evt) => {
+    const el = evt.target
+    const outerHTML = el.outerHTML
+    const innerHTML = el.innerHTML
+    if (el) {
+        const parent = el.parentElement;
+        parent.innerHTML = el.parentElement.innerHTML.replace(outerHTML, innerHTML)
+        updateSelectionsInLocalStorage(el.id, parent.innerHTML)
+        parent.querySelectorAll('.highlighted').forEach(el => el.addEventListener('click', deleteSelection))
+        return true;
+    }
+    console.error('could not delete selection', id)
+    return false;
+}
 
 const highlightSelection = (selection, color) => {
 
     const surroundElement = document.createElement('span')
-    surroundElement.id = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15)
+    surroundElement.id = `highlighted-${Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15)}`
+    surroundElement.title = 'Click to delete selection'
     if (color) {
-        surroundElement.classList.add(`refined-jw-${color}-bg`)
+        surroundElement.classList.add(`highlighted`, `refined-jw-${color}-bg`)
     }
+
 
     let validSelection = false
     let tries = 0
@@ -662,9 +784,12 @@ const highlightSelection = (selection, color) => {
         }
     } while (!validSelection && tries < 1000)
 
-    return validSelection ? selection : null
+    surroundElement.addEventListener('click', deleteSelection)
+
+    return validSelection ? {selection, id: surroundElement.id} : null
 
 }
+
 
 /*
 *
@@ -676,14 +801,43 @@ const LS_USER_PREF_AUDIO_PLAYBACK_RATE = 'userPref-audio-playbackRate';
 const LS_PREVENT_SEARCH_FOCUS = 'preventSearchFocus';
 const LS_CURRENT_SHORTCUT = 'currentShortcut';
 
+const LOCAL_STORAGE_KEY = 'REFINED-JW-USER-DATA'
+
+const updateSelectionsInLocalStorage = (id, html) => {
+
+    const userData = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY) || "{}")
+
+    const key = encodeURIComponent(window.location.href.replace(window.location.hash, ""))
+    const currentData = userData[key] || {}
+
+    const allSelections = currentData.selection || []
+
+    const remainingSelections = allSelections.filter(s => s.id !== id)
+
+    for (const selection of remainingSelections) {
+        if (selection.startElementInnerHTML.includes(id)) {
+            selection.startElementInnerHTML = html
+        } else if (selection.endElementInnerHTML.includes(id)) {
+            selection.endElementInnerHTML = html
+        }
+    }
+
+    currentData.selection = remainingSelections
+    userData[key] = currentData
+    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(userData))
+}
+
 const getFromLocalStorage = (type) => {
-    const key = window.location.href.replace(window.location.hash, "")
-    const userData = JSON.parse(localStorage.getItem(key) || "{}")
+
+    const userData = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY) || "{}")
+
+    const key = encodeURIComponent(window.location.href.replace(window.location.hash, ""))
+    const currentData = userData[key] || "{}"
 
     if (type === 'comment') {
-        return userData[type] || {}
+        return currentData[type] || {}
     } else if (type === 'selection') {
-        return userData[type] || []
+        return currentData[type] || []
     } else {
         console.error('unknown type', type)
     }
@@ -706,13 +860,16 @@ const addToLocalStorage = (type, value) => {
         console.error('unknown type', type)
     }
 
-    const key = window.location.href.replace(window.location.hash, "")
+    const userData = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY) || "{}")
 
-    const userDataComplete = JSON.parse(localStorage.getItem(key) || "{}")
+    const key = encodeURIComponent(window.location.href.replace(window.location.hash, ""))
+    const currentDataComplete = userData[key] || {}
 
-    userDataComplete[type] = userDataOfType
+    currentDataComplete[type] = userDataOfType
 
-    localStorage.setItem(key, JSON.stringify(userDataComplete))
+    userData[key] = currentDataComplete
+
+    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(userData))
 }
 
 let setPreventSearchFocus = () => {
