@@ -9,7 +9,7 @@ With a single donation you are helping me to keep this project alive. Adding new
 You can also help us by: 
 
 - [creating an issue](https://github.com/sauloco/refined-jw/issues)
-- [follow us on instagram](https://instagram.com/rusticit)
+- [following on instagram](https://instagram.com/rusticit)
 
 Enhance jw.org and wol.jw.org navigation experience.
 
