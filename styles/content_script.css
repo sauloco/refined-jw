@@ -255,3 +255,56 @@ textarea {
         color: var(--light-yellow);
     }
 }
+
+/* Transition for the popover itself */
+#anchor_1 {
+    anchor-name: --anchor_1;
+}
+
+[popover]:popover-open {
+    opacity: 1;
+}
+
+[popover] {
+    font: 13px/1.231 arial, helvetica, clean, sans-serif;
+    padding: .25rem .5rem;
+    border: 1px solid var(--opposite-purple);
+    background-color: var(--purple);
+    border-radius: 0 .5rem .5rem .5rem;
+    color: var(--text-color);
+    max-width: min(20vw, 250px);
+    box-shadow: 0 25px 50px -12px var(--opposite-purple);
+
+    /* Final state of the exit animation */
+    opacity: 0;
+
+    transition:
+            opacity 0.7s,
+            transform 0.7s,
+            overlay 0.7s allow-discrete,
+            display 0.7s allow-discrete;
+    /* Equivalent to
+    transition: all 0.7s allow-discrete; */
+
+    position: absolute;
+    position-anchor: --anchor_1;
+    inset-block-start: anchor(--anchor_1 bottom);
+    inset-inline-start: anchor(--anchor_1 right);
+}
+
+/* Needs to be after the previous [popover]:popover-open rule
+to take effect, as the specificity is the same */
+@starting-style {
+    [popover]:popover-open {
+        opacity: 0;
+    }
+}
+
+.popover-dismiss {
+    cursor: pointer;
+
+
+    &:hover {
+        text-decoration: underline;
+    }
+}

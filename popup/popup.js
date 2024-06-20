@@ -50,7 +50,7 @@ const renderShortcuts = (shortcuts) => {
     firstRow = `<div class="cell">${firstRow} ${firstRowDescription}</div>`
     firstRow += `<blockquote class="cell note">Currently highlight support is very limited, you can only create highlights within the same paragraph or verse.</blockquote>`
 
-    document.querySelector('body').innerHTML += firstRow + shortcutListHtml
+    document.querySelector('.content').innerHTML += firstRow + shortcutListHtml
 }
 
 const enableRefinedJW = (version) => {

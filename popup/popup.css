@@ -48,7 +48,7 @@ If you want this size in pixels (px)	Declare this percent (%)
 :root {
     --color-background: #f1f1f1;
     --color-border: #cccccc;
-    --color-text: #8a8a8a;
+    --color-text: #2c2c2c;
     --color-accent: #2c2c2c;
     --kbd-color-background: #e5e5e5;
     --kbd-color-border: #afafaf;
@@ -70,20 +70,12 @@ If you want this size in pixels (px)	Declare this percent (%)
 
 body {
     font: 13px/1.231 arial, helvetica, clean, sans-serif; /* YUI Font Reset */
+    min-width: 400px;
+    user-select: none;
 
-    height: 100%;
     background: var(--color-background);
     color: var(--color-text);
-    line-height: 1.4; /* line-height is to ensure that text is legible enough ( enough space between the lines) */
-    min-width: 400px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    padding: .5em;
-    margin: .5em;
-    gap: 1em;
-    user-select: none;
+    line-height: 1.4; /* line-height is to ensure that text is legible enough (enough space between the lines) */
 }
 
 select, input, button, textarea, button {
@@ -98,7 +90,7 @@ table {
 
 pre, code, kbd, samp, tt {
     font-family: monospace;
-    *font-size: 108%;
+    font-size: 108%;
     line-height: 100%;
 }
 
@@ -469,8 +461,33 @@ kbd:hover {
     font-size: 80%;
     text-transform: none !important;
 
-    position: absolute;
+    position: fixed;
     top: .5rem;
     right: .5rem;
 
+    z-index: 2;
+
+}
+
+header {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    backdrop-filter: blur(2rem);
+    border-bottom: 1px solid var(--color-border);
+    padding: 1rem;
+
+    * {
+        margin: 0;
+        color: var(--color-text);
+    }
+}
+
+.content {
+    padding-top: 1rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 1em;
 }

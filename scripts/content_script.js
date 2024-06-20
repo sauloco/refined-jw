@@ -86,9 +86,8 @@ const calculateSpeechTime = (value) => {
 
     const words = value.split(' ');
 
-    const speechTimeInSeconds = Math.ceil(words.length / 140 * 60) // 140 average words per minute
-
-    return speechTimeInSeconds
+    // 140 average words per minute
+    return Math.ceil(words.length / 140 * 60)
 }
 
 /*
@@ -272,18 +271,78 @@ const handleShortcut = (event) => {
 *
 * */
 
-function highlightWithColor(document, color) {
-    const selection = document.getSelection()
+let popover;
+let popoverTimeout;
+const POPOVER_DELAY = 30 * 1000
 
+function scheduleDefaultHidePopover() {
+    popoverTimeout = setTimeout(hidePopover, POPOVER_DELAY)
+}
+
+function hidePopover() {
+    popover.hidePopover()
+    document.body.removeChild(popover)
+    popover = null
+
+    if (popoverTimeout) {
+        clearTimeout(popoverTimeout)
+    }
+}
+
+function displayPopover() {
+    const highlightLink = document.querySelector('#dailyText > div.articlePositioner > div.tabContent.active > a')
+    const {top, left} = highlightLink.getBoundingClientRect()
+
+    if (!popover) {
+
+        popover = document.createElement('div')
+        popover.className = 'refined-jw-highlight-popover'
+        popover.popover = "manual"
+        popover.id = `popover-info`
+        popover.innerHTML = `
+        <p>Please notice as this page is dynamic <strong>your highlight will be lost</strong> when you leave the page.</p> 
+        
+        <p>We strongly recommend that you navigate to <a href="${highlightLink.href}" target="_blank" rel="noopener noreferrer">${highlightLink.textContent}</a> page before adding your highlight.</p> 
+        
+        <p class="popover-dismiss">Click on this popover to dismiss it</p>
+        `
+
+        highlightLink.popovertarget = popover.id
+        highlightLink.id = 'anchor_1'
+
+        document.body.appendChild(popover)
+
+        popover.addEventListener('click', () => {
+            hidePopover()
+        })
+
+        popover.showPopover()
+
+        scheduleDefaultHidePopover()
+
+    } else {
+        if (popoverTimeout) {
+            clearTimeout(popoverTimeout)
+        }
+
+        scheduleDefaultHidePopover();
+
+    }
+}
+
+function highlightWithColor(document, color) {
+
+
+    const selection = document.getSelection()
 
     const selectionData = highlightSelection(selection, color)
 
     if (!selectionData) {
-        console.log('invalid selection')
+        console.error('invalid selection')
         return false
     }
 
-    const { selection: validSelection, id} = selectionData
+    const {selection: validSelection, id} = selectionData
 
     const {
         startContainer,
@@ -304,15 +363,21 @@ function highlightWithColor(document, color) {
     const startElementSelector = startContainer.id ? `${startContainer.tagName.toLowerCase()}#${startContainer.id}` : `${startContainer.parentElement.tagName.toLowerCase()}#${startContainer.parentElement.id}`
     const endElementSelector = endContainer.id ? `${endContainer.tagName.toLowerCase()}#${endContainer.id}` : `${endContainer.parentElement.tagName.toLowerCase()}#${endContainer.parentElement.id}`
 
+    const homeLink = document.querySelector('#menuHome > a')
+    const isHomePage = window.location.href === homeLink.href
 
-    addToLocalStorage('selection', {
-        color,
-        startElementSelector,
-        startElementInnerHTML,
-        endElementSelector,
-        endElementInnerHTML,
-        id
-    })
+    if (isHomePage) {
+        displayPopover();
+    } else {
+        addToLocalStorage('selection', {
+            color,
+            startElementSelector,
+            startElementInnerHTML,
+            endElementSelector,
+            endElementInnerHTML,
+            id
+        })
+    }
 
     return false
 }
