@@ -176,12 +176,18 @@ kbd {
 
 .badge {
 
+    --bg-color: var(--gray);
+
     &.free {
         --bg-color: var(--link-color);
     }
 
     &.version {
-        --bg-color: var(--purple);
+        --bg-color: var(--opposite-purple);
+    }
+
+    &.promo {
+        --bg-color: var(--opposite-purple);
     }
 
     &.stopwatch {
@@ -204,9 +210,10 @@ kbd {
     border-radius: 3px;
     margin-left: 0.5em;
     font-weight: bolder;
-    color: white;
+    color: var(--box-color);
     text-transform: uppercase;
     pointer-events: none;
+    width: max-content;
 }
 
 .refined-jw-summarized {
@@ -289,7 +296,7 @@ textarea {
     position: absolute;
     position-anchor: --anchor_1;
     inset-block-start: anchor(--anchor_1 bottom);
-    inset-inline-start: anchor(--anchor_1 right);
+    inset-inline-start: anchor(--anchor_1 left);
 }
 
 /* Needs to be after the previous [popover]:popover-open rule
@@ -307,4 +314,33 @@ to take effect, as the specificity is the same */
     &:hover {
         text-decoration: underline;
     }
+}
+
+#vjs_video_3 > div.vjs-text-track-display > div > div > div {
+    /*background-color: red !important;*/
+    /*color: blue !important;*/
+}
+
+.jw-refined-transcription {
+    max-width: 70ch;
+    padding-right: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+.jw-refined-transcription-title {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    flex-wrap: wrap;
+    justify-content: space-between;
+}
+
+.jw-refined-transcription-link {
+    line-break: anywhere;
+}
+
+#download-vtt {
+    width: max-content;
 }

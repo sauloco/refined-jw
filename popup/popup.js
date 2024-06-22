@@ -22,6 +22,8 @@ const getSymbol = (key) => {
             return isMac ? '⌥ ' : 'Alt '
         case 'Meta':
             return isMac ? '⌘ ' : 'Win '
+        case ' ':
+            return 'Space'
         default:
             return ''
     }

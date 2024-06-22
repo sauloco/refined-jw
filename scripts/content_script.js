@@ -6,6 +6,31 @@
 
 const isWOL = window.location.href.includes('wol.jw.org')
 const isJW = !isWOL
+
+const JW_AUDIO_RATE_SELECTORS = {
+    '2': '#vjs_video_3 > div:nth-child(9) > ul > li:nth-child(1)',
+    '1.5': '#vjs_video_3 > div:nth-child(9) > ul > li:nth-child(2)',
+    '1.2': '#vjs_video_3 > div:nth-child(9) > ul > li:nth-child(3)',
+    '1.1': '#vjs_video_3 > div:nth-child(9) > ul > li:nth-child(4)',
+    '1': '#vjs_video_3 > div:nth-child(9) > ul > li:nth-child(5)',
+    '0.9': '#vjs_video_3 > div:nth-child(9) > ul > li:nth-child(6)',
+    '0.8': '#vjs_video_3 > div:nth-child(9) > ul > li:nth-child(7)',
+    '0.7': '#vjs_video_3 > div:nth-child(9) > ul > li:nth-child(8)',
+    '0.6': '#vjs_video_3 > div:nth-child(9) > ul > li:nth-child(9)'
+}
+
+const JW_VIDEO_RATE_SELECTORS = {
+    '2': '#vjs_video_3 > div:nth-child(11) > ul > li:nth-child(1)',
+    '1.5': '#vjs_video_3 > div:nth-child(11) > ul > li:nth-child(2)',
+    '1.2': '#vjs_video_3 > div:nth-child(11) > ul > li:nth-child(3)',
+    '1.1': '#vjs_video_3 > div:nth-child(11) > ul > li:nth-child(4)',
+    '1': '#vjs_video_3 > div:nth-child(11) > ul > li:nth-child(5)',
+    '0.9': '#vjs_video_3 > div:nth-child(11) > ul > li:nth-child(6)',
+    '0.8': '#vjs_video_3 > div:nth-child(11) > ul > li:nth-child(7)',
+    '0.7': '#vjs_video_3 > div:nth-child(11) > ul > li:nth-child(8)',
+    '0.6': '#vjs_video_3 > div:nth-child(11) > ul > li:nth-child(9)'
+}
+
 const initJWRefined = () => {
 
     initAllInputs();
@@ -19,6 +44,147 @@ const initJWRefined = () => {
     startShortcuts()
 
     waitForAudioAvailable()
+    waitForVideoAvailable()
+}
+
+let subtitlesRetries = 0
+
+const startSubtitlesHandler = async () => {
+    const video = document.querySelector('video')
+    if (isJW && video) {
+        const pageConfig = document.querySelector('#pageConfig')
+        const pubShareLink = document.querySelector('.shareButtonWrapper .link')
+
+        const mediaPlayer = document.querySelector('.jsMediaPlayer')
+        // https://b.jw-cdn.org/apis/mediator/v1/media-items/S/pub-mwbv_202405_1_VIDEO?clientType=www
+        let url;
+        if (pubShareLink?.dataset?.lank && pageConfig?.dataset?.wt_lang) {
+            const {wt_lang: wtLang} = pageConfig.dataset
+            const {lank} = pubShareLink.dataset
+            url = `https://b.jw-cdn.org/apis/mediator/v1/media-items/${wtLang}/${lank}?clientType=www`
+        } else if (mediaPlayer) {
+            url = mediaPlayer.dataset.jsonurl
+        } else {
+            subtitlesRetries++
+            if (subtitlesRetries < 5) {
+                setTimeout(() => startSubtitlesHandler, 1000)
+                return
+            } else {
+                console.error('could not find subtitles url')
+            }
+        }
+
+
+        const response = await fetch(url)
+
+        if (response) {
+            const jsonResponse = await response.json()
+            let subtitlesUrl;
+            if (url.includes('mediator')) {
+                const {media} = jsonResponse
+                const {files} = media[0]
+
+                if (!files) {
+                    return
+                }
+                const firstFileWithSubtitles = files.find(file => !!file.subtitles)
+                if (!firstFileWithSubtitles) {
+                    console.info('no subtitles found')
+                    return
+                }
+                const {subtitles: {url: subsUrl}} = firstFileWithSubtitles
+                subtitlesUrl = subsUrl
+            } else {
+                const {files} = jsonResponse
+                const urlParams = new URLSearchParams(new URL(url).search);
+                const langWritten = urlParams.get('langwritten');
+
+                let found = false
+                for (const format of Object.values(files[langWritten.toUpperCase()])) {
+                    found = false
+                    for (const file of format) {
+                        if (file.subtitles) {
+                            subtitlesUrl = file.subtitles.url
+                            found = true
+                            break
+                        }
+                        if (found) {
+                            break
+                        }
+                    }
+                }
+
+            }
+
+
+            const vttResponse = await fetch(subtitlesUrl)
+
+            if (vttResponse) {
+                const vtt = await vttResponse.text()
+
+                const parser = new WebVTT.Parser(window, WebVTT.StringDecoder())
+
+                const cues = []
+                const regions = [];
+
+                parser.oncue = function (cue) {
+                    cues.push(cue);
+                };
+                parser.onregion = function (region) {
+                    regions.push(region);
+                }
+                parser.parse(vtt);
+                parser.flush();
+
+                let text = "";
+
+                const lines = cues.map(cue => cue.text).join('\n').split('\n')
+                for (const i in lines) {
+                    const prevLine = lines[+i - 1]
+                    const line = lines[i]
+                    const nextLine = lines[+i + 1] || ''
+
+                    text += `${line.startsWith(`‘`) && prevLine.startsWith(`‘`) ? line.substring(1) : line}${isNewLineRequired(line, nextLine) ? '\n' : ' '}`
+                }
+
+                const title = document.querySelector('#article h1')
+
+                text = `<strong>${title.textContent}</strong>
+                    
+${text}
+                    
+<a class="jw-refined-transcription-link" href="${window.location.href}">${window.location.href}</a>
+`
+
+                const transcriptionContainer = document.querySelector('.contentArea') || document.querySelector('#sidebar')
+
+                transcriptionContainer.innerHTML += `
+<div id="jw-refined-transcription" class="jw-refined-transcription">
+    <span id="jw-refined-transcription-title"  class="jw-refined-transcription-title"><h2 id="anchor_1">Transcription</h2><span class="badge promo">JW Refined</span></span>
+    <div id="jw-refined-transcription-text" class="jw-refined-transcription-text">
+        ${text.replace(/\n/g, '<br/>') || 'No transcription available'}
+    </div>
+    <button id="download-vtt" class="secondaryButton link">
+        <span class="buttonText">Download as subtitles</span>
+    </button>
+</div>`
+
+                const downloadButton = document.querySelector('#download-vtt')
+
+                downloadButton.addEventListener('click', () => {
+                    download(vtt, `${title.textContent}_subtitles.vtt`, 'text/vtt')
+                })
+            }
+        }
+    }
+}
+
+const isNewLineRequired = (line, nextLine) => {
+    if (line.endsWith('.') || line.endsWith('!') || line.endsWith('?') || line.endsWith('."') || line.endsWith(`.'`)) {
+        return !(nextLine.startsWith(`‘`) || nextLine.endsWith(`’`));
+
+    }
+    return false
 }
 
 const initAllInputs = () => {
@@ -68,7 +234,7 @@ const loadSelections = () => {
 }
 
 const startShortcuts = () => {
-    document.addEventListener("keyup", handleShortcut);
+    document.addEventListener("keydown", handleShortcut);
     clearCurrentShortcut();
 }
 
@@ -289,9 +455,8 @@ function hidePopover() {
     }
 }
 
-function displayPopover() {
-    const highlightLink = document.querySelector('#dailyText > div.articlePositioner > div.tabContent.active > a')
-    const {top, left} = highlightLink.getBoundingClientRect()
+function displayPopover(bindToSelector, html) {
+    const highlightLink = document.querySelector(bindToSelector)
 
     if (!popover) {
 
@@ -299,13 +464,7 @@ function displayPopover() {
         popover.className = 'refined-jw-highlight-popover'
         popover.popover = "manual"
         popover.id = `popover-info`
-        popover.innerHTML = `
-        <p>Please notice as this page is dynamic <strong>your highlight will be lost</strong> when you leave the page.</p> 
-        
-        <p>We strongly recommend that you navigate to <a href="${highlightLink.href}" target="_blank" rel="noopener noreferrer">${highlightLink.textContent}</a> page before adding your highlight.</p> 
-        
-        <p class="popover-dismiss">Click on this popover to dismiss it</p>
-        `
+        popover.innerHTML = html
 
         highlightLink.popovertarget = popover.id
         highlightLink.id = 'anchor_1'
@@ -363,42 +522,63 @@ function highlightWithColor(document, color) {
     const startElementSelector = startContainer.id ? `${startContainer.tagName.toLowerCase()}#${startContainer.id}` : `${startContainer.parentElement.tagName.toLowerCase()}#${startContainer.parentElement.id}`
     const endElementSelector = endContainer.id ? `${endContainer.tagName.toLowerCase()}#${endContainer.id}` : `${endContainer.parentElement.tagName.toLowerCase()}#${endContainer.parentElement.id}`
 
-    const homeLink = document.querySelector('#menuHome > a')
-    const isHomePage = window.location.href === homeLink.href
-
-    if (isHomePage) {
-        displayPopover();
+    const startElementClassList = document.querySelector(startElementSelector).classList
+    if (
+        startElementClassList.contains('jw-refined-transcription-text') || startElementClassList.contains('jw-refined-transcription-title') || startElementClassList.contains('jw-refined-transcription')) {
+        displayPopover('.jw-refined-transcription-title > h2', `<p>Please notice that the Transcription section is unofficial <strong>your highlights will be lost</strong> when you leave the page.</p><p class="popover-dismiss">Click on this popover to dismiss it</p>`);
     } else {
-        addToLocalStorage('selection', {
-            color,
-            startElementSelector,
-            startElementInnerHTML,
-            endElementSelector,
-            endElementInnerHTML,
-            id
-        })
+        const homeLink = document.querySelector('#menuHome > a') || document.querySelector('#siteLogo')
+        const isHomePage = window.location.href === homeLink.href
+
+        if (isHomePage) {
+            displayPopover('#dailyText > div.articlePositioner > div.tabContent.active > a', `<p>Please notice as this page is dynamic <strong>your highlight will be lost</strong> when you leave the page.</p>
+<p>We strongly recommend that you navigate to <a href="${highlightLink.href}" target="_blank" rel="noopener noreferrer">${highlightLink.textContent}</a> page before adding your highlight.</p>
+<p class="popover-dismiss">Click on this popover to dismiss it</p>`);
+        } else {
+            addToLocalStorage('selection', {
+                color,
+                startElementSelector,
+                startElementInnerHTML,
+                endElementSelector,
+                endElementInnerHTML,
+                id
+            })
+        }
     }
+
 
     return false
 }
 
 
-function clickFirstFromList(selectors, document) {
+function clickFirstFromList(selectors, document, ignoreVisibility = true) {
     for (const selector of selectors) {
         const btn = document.querySelector(selector)
-        if (btn) {
+        const isVisible = ignoreVisibility || btn && btn.offsetParent !== null
+        if (btn && isVisible) {
             btn.click()
             setPreventSearchFocus()
-            return true;
+            return btn;
         }
     }
 }
 
-function getPlaybackRate() {
-    return Number(localStorage.getItem(LS_USER_PREF_AUDIO_PLAYBACK_RATE)) || 1;
+function getPlaybackRate(lsKey = LS_USER_PREF_AUDIO_PLAYBACK_RATE) {
+    return Number(localStorage.getItem(lsKey)) || 1;
 }
 
 const SHORTCUTS = {
+    'Escape': {
+        keys: ['Esc'],
+        description: "Close the popup",
+        action: ({event, document}) => {
+            event.preventDefault()
+            event.stopPropagation()
+            const selectors = ['#mid1011214 > div.jsSimpleModalContainer > div > div > div.standardModal-toolbar > button']
+
+            return !!clickFirstFromList(selectors, document, false)
+        }
+    },
     'Q': {
         keys: ['Shift', 'Q'],
         description: "Go to search or query the selected text",
@@ -425,10 +605,10 @@ const SHORTCUTS = {
     },
     'W': {
         keys: ['Shift', 'W'],
-        description: "Go to Bible",
+        description: "Go to Bible or Bible Teachings",
         action: ({event, document}) => {
             const selectors = ['#menuBible > a']
-            return clickFirstFromList(selectors, document)
+            return !!clickFirstFromList(selectors, document)
         }
     },
     'E': {
@@ -436,7 +616,7 @@ const SHORTCUTS = {
         description: "Go to Publications",
         action: ({event, document}) => {
             const selectors = ['#menuPublications > a']
-            return clickFirstFromList(selectors, document)
+            return !!clickFirstFromList(selectors, document)
         }
     },
     'R': {
@@ -444,7 +624,7 @@ const SHORTCUTS = {
         description: "Go to Meetings",
         action: ({event, document}) => {
             const selectors = ['#menuToday > a']
-            return clickFirstFromList(selectors, document)
+            return !!clickFirstFromList(selectors, document)
         }
     },
     'T': {
@@ -453,31 +633,59 @@ const SHORTCUTS = {
         action: ({document}) => {
             const selectors = ['#navigationDailyTextToday > a',]
 
-            return clickFirstFromList(selectors, document)
+            return !!clickFirstFromList(selectors, document)
         }
     },
     'A': {
         keys: ['Shift', 'A'],
         description: "Go to Home",
         action: ({event, document}) => {
-            const selectors = ['#menuHome > a']
-            return clickFirstFromList(selectors, document)
+            const selectors = ['#menuHome > a', '#siteLogo']
+            return !!clickFirstFromList(selectors, document)
         }
     },
     'S': {
         keys: ['Shift', 'S'],
         description: "Share",
         action: ({event, document}) => {
-            const selectors = ['#shareButtonFooter']
-            return clickFirstFromList(selectors, document)
+            const selectors = ['#shareButtonFooter', '.jsShare',]//'#article > div > div > div > div.jsShareButtonContainer.shareButtonWrapper > button', '#article > div.articleFooterLinks > div.articleShareLinks > div > button']
+
+            clickFirstFromList(selectors, document)
+
+            setTimeout(() => {
+
+                const textElement = document.querySelector('div.jsSimpleModalContainer > div > div > div.standardModal-contentContainer > div > input')
+                if (textElement) {
+                    textElement.focus()
+                }
+            }, 500)
+
+            return true
+        }
+    },
+    'F': {
+        keys: ['Shift', 'F'],
+        description: "Toggle fullscreen",
+        action: ({event, document}) => {
+            const selectors = ['#vjs_video_3 button.vjs-fullscreen-control']
+            return !!clickFirstFromList(selectors, document)
         }
     },
     'L': {
         keys: ['Shift', 'L'],
         description: "Go to Languages",
         action: ({event, document}) => {
-            const selectors = ['#libraryTitle > a']
-            return clickFirstFromList(selectors, document)
+            const selectors = ['#libraryTitle > a', '#siteHeader > div.siteFeaturesContainer > a.tertiaryButton.siteFeaturesItem.jsChooseSiteLanguage']
+            return !!clickFirstFromList(selectors, document)
+        }
+    },
+    'C': {
+        keys: ['Shift', 'C'],
+        description: "Toggle captions",
+        action: ({event, document}) => {
+            const selectors = ['#vjs_video_3 > div:nth-child(10) > ul > li.vjs-menu-item.vjs-menu-item-radio:not(.vjs-selected)']
+
+            return !!clickFirstFromList(selectors, document)
         }
     },
     'B': {
@@ -493,7 +701,7 @@ const SHORTCUTS = {
                 '#article > div.articleFooterLinks.cms-clearfix > nav > div > div:nth-child(1) > a'
             ]
 
-            return clickFirstFromList(selectors, document);
+            return !!clickFirstFromList(selectors, document);
         }
     },
     'N': {
@@ -509,7 +717,7 @@ const SHORTCUTS = {
                 '#article > div:nth-child(4) > div.links > a.iconNext.dir-ltr.secondaryButton', // next search result
                 '#article > div.articleFooterLinks.cms-clearfix > nav > div > div:nth-child(3) > a', // next chapter JW
             ]
-            return clickFirstFromList(selectors, document);
+            return !!clickFirstFromList(selectors, document);
         }
     },
     '1': {
@@ -589,18 +797,19 @@ const SHORTCUTS = {
         description: "Go to Settings",
         action: ({event, document}) => {
             const selectors = ['#menuToolsPreferences > a']
-            return clickFirstFromList(selectors, document)
+            return !!clickFirstFromList(selectors, document)
         }
     },
-    '.': {
-        keys: ['.'],
+    ' ': {
+        keys: [' '],
         description: "Current audio or video play/pause",
         action: ({event}) => {
             event.preventDefault()
             event.stopPropagation()
+            const maybeJWVideoPlayButtonElement = document.querySelector('#vjs_video_3 > button')
+            const playButtonStyle = window.getComputedStyle(maybeJWVideoPlayButtonElement) || {}
 
-
-            if (audioElement) {
+            if (audioElement && !!audioElement.src) {
                 const rate = getPlaybackRate()
                 setPlaybackRate(rate)
                 if (audioElement.paused) {
@@ -608,6 +817,18 @@ const SHORTCUTS = {
                 } else {
                     audioElement.pause()
                 }
+            } else if (isJW && maybeJWVideoPlayButtonElement && playButtonStyle.display !== 'none') {
+                maybeJWVideoPlayButtonElement.click()
+            } else if (videoElement && !!videoElement.src) {
+                const rate = getPlaybackRate()
+                setPlaybackRate(rate)
+                if (videoElement.paused) {
+                    videoElement.play()
+                } else {
+                    videoElement.pause()
+                }
+            } else {
+                console.info('no audio or video element')
             }
         }
     },
@@ -652,7 +873,7 @@ const SHORTCUTS = {
             event.preventDefault()
             event.stopPropagation()
 
-            if (audioElement) {
+            if (audioElement && !!audioElement.src) {
 
                 if (markers) {
                     const currentMarkerIndex = markers.findIndex(m => audioElement.currentTime >= timeNotationToSeconds(m.startTime) && audioElement.currentTime <= timeNotationToSeconds(m.startTime) + timeNotationToSeconds(m.duration))
@@ -665,6 +886,8 @@ const SHORTCUTS = {
                 }
 
                 audioElement.currentTime = Math.min(audioElement.duration, audioElement.currentTime + 5)
+            } else if (videoElement && !!videoElement.src) {
+                videoElement.currentTime = Math.min(videoElement.duration, videoElement.currentTime + 15)
             }
         }
     },
@@ -676,7 +899,7 @@ const SHORTCUTS = {
             event.stopPropagation()
 
 
-            if (audioElement) {
+            if (audioElement && !!audioElement.src) {
 
                 if (markers) {
                     const currentMarkerIndex = markers.findIndex(m => audioElement.currentTime >= timeNotationToSeconds(m.startTime) && audioElement.currentTime <= timeNotationToSeconds(m.startTime) + timeNotationToSeconds(m.duration))
@@ -689,6 +912,8 @@ const SHORTCUTS = {
                 }
 
                 audioElement.currentTime = Math.max(0, audioElement.currentTime - 5)
+            } else if (videoElement && !!videoElement.src) {
+                videoElement.currentTime = Math.max(0, videoElement.currentTime - 5)
             }
 
         }
@@ -702,27 +927,68 @@ const timeNotationToSeconds = (timeNotation) => {
     return Number(hours) * 3600 + Number(minutes) * 60 + Number(seconds) + Number(milliseconds) / 1000
 }
 
-let clearAudioSearchInterval;
+
 let audioElement;
 let audioPlayer;
+
+
+let videoElement;
 
 const getAvailablePlaybackRates = () =>
     isWOL
         ? [0.6, 0.7, 0.8, 0.9, 1, 1.1, 1.2, 1.5, 2, 3, 4, 5]
         : [0.6, 0.7, 0.8, 0.9, 1, 1.1, 1.2, 1.5, 2]
 const waitForAudioAvailable = () => {
-    clearAudioSearchInterval = setInterval(() => {
+    let clearAudioSearchInterval;
+    clearAudioSearchInterval = setInterval(async () => {
         const audio = document.querySelector('audio')
         const wolAudioPlayer = document.querySelector('#mep_0')
         const jwAudioPlayer = document.querySelector('#vjs_video_3 > div.vjs-control-bar')
 
         if (audio && (wolAudioPlayer || jwAudioPlayer)) {
+            if (clearAudioSearchInterval) {
+                clearInterval(clearAudioSearchInterval)
+            }
             audioElement = audio
             audioPlayer = wolAudioPlayer || jwAudioPlayer
             audioElement.playbackRate = getPlaybackRate()
             displayPlaybackRate()
-            getMarkers()
-            clearInterval(clearAudioSearchInterval)
+            await getMarkers()
+
+            if (isJW) {
+                for (const sel of Object.values(JW_AUDIO_RATE_SELECTORS)) {
+                    const el = document.querySelector(sel)
+                    if (el) {
+                        el.addEventListener('click', () => setTimeout(displayPlaybackRate, 100))
+                    }
+                }
+            }
+        }
+    }, 500)
+}
+
+const waitForVideoAvailable = () => {
+    let clearVideoSearchInterval;
+    clearVideoSearchInterval = setInterval(async () => {
+        const video = document.querySelector('video')
+
+        if (video) {
+            if (clearVideoSearchInterval) {
+                clearInterval(clearVideoSearchInterval)
+            }
+            videoElement = video
+            videoElement.playbackRate = getPlaybackRate()
+            displayPlaybackRate()
+            setTimeout(startSubtitlesHandler, 1000)
+
+            if (isJW) {
+                for (const sel of Object.values(JW_VIDEO_RATE_SELECTORS)) {
+                    const el = document.querySelector(sel)
+                    if (el) {
+                        el.addEventListener('click', () => setTimeout(() => displayPlaybackRate(LS_USER_PREF_VIDEO_PLAYBACK_RATE), 100))
+                    }
+                }
+            }
         }
     }, 500)
 }
@@ -748,7 +1014,35 @@ const displayPlaybackRate = () => {
         playbackRateElement.innerHTML = `${rate}x`
 
         window.dispatchEvent(new Event('resize'));
+    } else if (videoElement) {
+        const rate = getPlaybackRate()
+        const durationWrapper = document.querySelector('#vjs_video_3 > div.vjs-control-bar > div.vjs-control-group.vjs-progress-group > div.vjs-control-group.vjs-time-display-group')
+
+        let playbackRateElement = document.querySelector('.refined-jw-audio-rate')
+
+        if (!playbackRateElement) {
+            playbackRateElement = document.createElement('span')
+            playbackRateElement.className = `refined-jw-audio-rate vjs-duration vjs-time-control vjs-control`
+            durationWrapper.appendChild(playbackRateElement)
+        }
+        playbackRateElement.innerHTML = `${rate}x`
+
+        window.dispatchEvent(new Event('resize'));
     }
+}
+
+function setRate(rate, rateHandlerElements, lsKey) {
+    let rateHandlerSelector = rateHandlerElements[rate.toString()]
+    if (!rateHandlerSelector) {
+        rateHandlerSelector = rateHandlerElements['1']
+    }
+    const rateHandler = document.querySelector(rateHandlerSelector)
+    if (rateHandler) {
+        rateHandler.click()
+        localStorage.setItem(lsKey, rate.toString())
+        displayPlaybackRate(lsKey)
+    }
+    return rate
 }
 
 const setPlaybackRate = (rate) => {
@@ -758,35 +1052,15 @@ const setPlaybackRate = (rate) => {
             const actualRate = Math.min(Math.max(availablePlaybackRates[0], rate), availablePlaybackRates[availablePlaybackRates.length - 1])
             audioElement.playbackRate = actualRate
             localStorage.setItem(LS_USER_PREF_AUDIO_PLAYBACK_RATE, actualRate.toString())
-            displayPlaybackRate()
+            displayPlaybackRate(LS_USER_PREF_AUDIO_PLAYBACK_RATE)
             return actualRate
         } else if (isJW) {
-            const rateHandlerElements = {
-                '2': '#vjs_video_3 > div:nth-child(9) > ul > li:nth-child(1)',
-                '1.5': '#vjs_video_3 > div:nth-child(9) > ul > li:nth-child(2)',
-                '1.2': '#vjs_video_3 > div:nth-child(9) > ul > li:nth-child(3)',
-                '1.1': '#vjs_video_3 > div:nth-child(9) > ul > li:nth-child(4)',
-                '1': '#vjs_video_3 > div:nth-child(9) > ul > li:nth-child(5)',
-                '0.9': '#vjs_video_3 > div:nth-child(9) > ul > li:nth-child(6)',
-                '0.8': '#vjs_video_3 > div:nth-child(9) > ul > li:nth-child(7)',
-                '0.7': '#vjs_video_3 > div:nth-child(9) > ul > li:nth-child(8)',
-                '0.6': '#vjs_video_3 > div:nth-child(9) > ul > li:nth-child(9)'
-            }
-
-            let rateHandlerSelector = rateHandlerElements[rate.toString()]
-            if (!rateHandlerSelector) {
-                rateHandlerSelector = rateHandlerElements['1']
-            }
-            const rateHandler = document.querySelector(rateHandlerSelector)
-            if (rateHandler) {
-                rateHandler.click()
-            }
-            localStorage.setItem(LS_USER_PREF_AUDIO_PLAYBACK_RATE, rate.toString())
-            displayPlaybackRate()
-            return rate
+            return setRate(rate, JW_AUDIO_RATE_SELECTORS, LS_USER_PREF_AUDIO_PLAYBACK_RATE);
         } else {
             return null
         }
+    } else if (videoElement && isJW) {
+        return setRate(rate, JW_VIDEO_RATE_SELECTORS, LS_USER_PREF_VIDEO_PLAYBACK_RATE);
     }
     return null
 }
@@ -822,7 +1096,6 @@ const deleteSelection = (evt) => {
         parent.querySelectorAll('.highlighted').forEach(el => el.addEventListener('click', deleteSelection))
         return true;
     }
-    console.error('could not delete selection', id)
     return false;
 }
 
@@ -863,6 +1136,7 @@ const highlightSelection = (selection, color) => {
 * */
 
 const LS_USER_PREF_AUDIO_PLAYBACK_RATE = 'userPref-audio-playbackRate';
+const LS_USER_PREF_VIDEO_PLAYBACK_RATE = 'userPref-video-playbackRate';
 const LS_PREVENT_SEARCH_FOCUS = 'preventSearchFocus';
 const LS_CURRENT_SHORTCUT = 'currentShortcut';
 
@@ -991,10 +1265,11 @@ const getMarkers = async () => {
         const isEnoughData = ((audioPubSym && bookNo && chapNo) || docId) && langWritten
 
         if (!isEnoughData) {
-            console.log('not enough wol data to get markers', {langWritten, docId, bookNo, chapNo, audioPubSym})
+            console.info('not enough wol data to get markers', {langWritten, docId, bookNo, chapNo, audioPubSym})
             return;
         }
 
+        // EXAMPLE: https://b.jw-cdn.org/apis/pub-media/GETPUBMEDIALINKS?booknum=1&output=json&pub=nwt&fileformat=MP3&alllangs=0&track=1&langwritten=S&txtCMSLang=S
         url = `https://b.jw-cdn.org/apis/pub-media/GETPUBMEDIALINKS?` +
             `${audioPubSym && !docId ? `pub=${audioPubSym}&` : ''}` +
             `${bookNo ? `booknum=${bookNo}&` : ''}` +
@@ -1026,10 +1301,9 @@ const getMarkers = async () => {
         const isEnoughData = !!url && !!langWritten
 
         if (!isEnoughData) {
-            console.log('not enough jw data to get markers', {url})
+            console.info('not enough jw data to get markers', {url})
             return;
         }
-        // https://b.jw-cdn.org/apis/pub-media/GETPUBMEDIALINKS?booknum=1&output=json&pub=nwt&fileformat=MP3&alllangs=0&track=1&langwritten=S&txtCMSLang=S
 
     }
 
@@ -1050,11 +1324,18 @@ chrome.runtime.onMessage.addListener(
         if (request.type === 'request_shortcuts') {
             sendResponse(SHORTCUTS);
         }
+        if (request.type === 'url_changed') {
+            initJWRefinedDeferred(500)
+        }
         return true;
     }
 );
 
-setTimeout(() => {
-    initJWRefined()
-}, 100)
 
+const initJWRefinedDeferred = (timeout = 100) => {
+    setTimeout(() => {
+        initJWRefined()
+    }, timeout)
+}
+
+initJWRefinedDeferred()
