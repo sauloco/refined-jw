@@ -807,7 +807,6 @@ const SHORTCUTS = {
             event.preventDefault()
             event.stopPropagation()
             const maybeJWVideoPlayButtonElement = document.querySelector('#vjs_video_3 > button')
-            const playButtonStyle = window.getComputedStyle(maybeJWVideoPlayButtonElement) || {}
 
             if (audioElement && !!audioElement.src) {
                 const rate = getPlaybackRate()
@@ -817,8 +816,11 @@ const SHORTCUTS = {
                 } else {
                     audioElement.pause()
                 }
-            } else if (isJW && maybeJWVideoPlayButtonElement && playButtonStyle.display !== 'none') {
-                maybeJWVideoPlayButtonElement.click()
+            } else if (isJW && maybeJWVideoPlayButtonElement) {
+                const playButtonStyle = window.getComputedStyle(maybeJWVideoPlayButtonElement) || {}
+                if (playButtonStyle.display !== 'none') {
+                    maybeJWVideoPlayButtonElement.click()
+                }
             } else if (videoElement && !!videoElement.src) {
                 const rate = getPlaybackRate()
                 setPlaybackRate(rate)
