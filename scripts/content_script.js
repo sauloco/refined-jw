@@ -89,7 +89,7 @@ const usageTracking = async (action, details = {}, forceNewThread = false) => {
         }
     )
 
-    if (action === 'new_user') {
+    if (action === 'new_user' || forceNewThread) {
         const data = await response.json()
         localStorage.setItem('REFINED-JW-THREAD-ID', data.id)
     } else if (response.status !== 200) {
