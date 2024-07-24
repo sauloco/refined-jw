@@ -31,6 +31,76 @@ const JW_VIDEO_RATE_SELECTORS = {
     '0.6': '#vjs_video_3 > div:nth-child(11) > ul > li:nth-child(9)'
 }
 
+let isRecurrentUser = false
+const getUserId = () => {
+    const userId = localStorage.getItem('REFINED-JW-USER-ID')
+
+    if (!userId) {
+        const newId = crypto.randomUUID();
+        localStorage.setItem('REFINED-JW-USER-ID', newId)
+        return newId
+    }
+    isRecurrentUser = true
+    return userId
+}
+
+
+const USER_ID = getUserId()
+const TRACKING_DISABLED = localStorage.getItem('REFINED-JW-TRACKING-DISABLED') === 'true'
+
+const usageTracking = async (action, details = {}, forceNewThread = false) => {
+
+    if (TRACKING_DISABLED) {
+        return
+    }
+
+    const sharedDetails = {
+        action,
+        ...details,
+        user_id: USER_ID,
+        is_recurrent_user: isRecurrentUser,
+        location: isWOL ? 'wol' : 'jw',
+        geolocation: navigator.geolocation ? JSON.stringify(navigator.geolocation, null, 2) : null,
+        screen: {
+            width: screen.width,
+            height: screen.height
+        },
+        userAgent: navigator.userAgent,
+        language: navigator.language,
+        languages: navigator.languages,
+        platform: navigator.platform,
+        maxTouchPoints: navigator.maxTouchPoints,
+        timestamp: new Date().toISOString(),
+    }
+
+    const threadId = forceNewThread ? null : localStorage.getItem('REFINED-JW-THREAD-ID')
+
+    const response = await fetch(
+        `https://discord.com/api/webhooks/1265755905304301611/lwpH8Q1LMiry1Gsj6UYbJuU72FnkwU7Ojo5SZDF6nMAu4aDkP7WBD-wyQUTe5qCgd_29?wait=true${threadId ? `&thread_id=${threadId}` : ''}`,
+        {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                ...(threadId ? {} : { thread_name: `${forceNewThread ? '🔴 Existent user' : '🟢 New user'} ${USER_ID}` }),
+                content: "```json\n" + JSON.stringify(sharedDetails, null, 2)+ "\n```"
+            })
+        }
+    )
+
+    if (action === 'new_user') {
+        const data = await response.json()
+        localStorage.setItem('REFINED-JW-THREAD-ID', data.id)
+    } else if (response.status !== 200) {
+        usageTracking(action, details, true)
+    }
+}
+
+if (!isRecurrentUser) {
+    usageTracking('new_user', {user_id: USER_ID})
+}
+
 const initJWRefined = () => {
 
     initAllInputs();
@@ -166,10 +236,27 @@ ${text}
     </button>
 </div>`
 
+                const intersectorOptions = {
+                    root: null,
+                    rootMargin: '0px',
+                    threshold: 0.1
+                }
+
+                const intersector = new IntersectionObserver((entries) => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) {
+                            usageTracking('transcription_in_viewport')
+                        }
+                    })
+                }, intersectorOptions)
+
+                intersector.observe(document.querySelector('#jw-refined-transcription'))
+
                 const downloadButton = document.querySelector('#download-vtt')
 
                 downloadButton.addEventListener('click', () => {
                     download(vtt, `${title.textContent}_subtitles.vtt`, 'text/vtt')
+                    usageTracking('download_subtitles')
                 })
             }
         }
@@ -286,6 +373,7 @@ function createStopwatch(parent, id) {
             el.innerHTML = content.replace('⏹️', '⏱️')
             el.title = 'Start Stopwatch'
         }
+        usageTracking('stopwatch')
     })
 }
 
@@ -348,6 +436,8 @@ const summarizeComment = (e) => {
 
     summarizedElement.innerHTML = cleanSummary + `<span class="refined-jw-speech-time">new comment time ${newSpeechTime}s</span>`
     document.querySelector(`#${taId}`).parentElement.appendChild(summarizedElement)
+
+    usageTracking('summarize')
 }
 
 function clearUnmatchedBrackets(str) {
@@ -423,7 +513,13 @@ const handleShortcut = (event) => {
         event.preventDefault()
         event.stopPropagation()
         const result = shortcut.action({event, document})
+
         clearCurrentShortcut()
+
+        const {keys, description} = shortcut
+
+        usageTracking('shortcut', {keys, description, result})
+
         return result
     }
 }
@@ -820,7 +916,9 @@ const SHORTCUTS = {
                 } else {
                     audioElement.pause()
                 }
-            } else if (isJW && maybeJWVideoPlayButtonElementVisible) {
+            }
+
+            if (isJW && maybeJWVideoPlayButtonElementVisible) {
                 maybeJWVideoPlayButtonElement.click()
             } else if (videoElement && !!videoElement.src) {
                 const rate = getPlaybackRate()
@@ -831,8 +929,6 @@ const SHORTCUTS = {
                     videoElement.pause()
                 }
 
-            } else {
-                console.info('no audio or video element')
             }
         }
     },
@@ -842,7 +938,6 @@ const SHORTCUTS = {
         action: ({event}) => {
             event.preventDefault()
             event.stopPropagation()
-
             const isAudio = !!audioElement && !!audioElement.src
             const rate = getPlaybackRate(isAudio ? LS_USER_PREF_AUDIO_PLAYBACK_RATE : LS_USER_PREF_VIDEO_PLAYBACK_RATE)
 
@@ -892,7 +987,9 @@ const SHORTCUTS = {
                 }
 
                 audioElement.currentTime = Math.min(audioElement.duration, audioElement.currentTime + 5)
-            } else if (videoElement && !!videoElement.src) {
+            }
+
+            if (videoElement && !!videoElement.src) {
                 videoElement.currentTime = Math.min(videoElement.duration, videoElement.currentTime + 15)
             }
         }
@@ -918,7 +1015,9 @@ const SHORTCUTS = {
                 }
 
                 audioElement.currentTime = Math.max(0, audioElement.currentTime - 5)
-            } else if (videoElement && !!videoElement.src) {
+            }
+
+            if (videoElement && !!videoElement.src) {
                 videoElement.currentTime = Math.max(0, videoElement.currentTime - 5)
             }
 
@@ -983,7 +1082,7 @@ const waitForVideoAvailable = () => {
                 clearInterval(clearVideoSearchInterval)
             }
             videoElement = video
-            videoElement.playbackRate = getPlaybackRate()
+            videoElement.playbackRate = getPlaybackRate(LS_USER_PREF_VIDEO_PLAYBACK_RATE)
             displayPlaybackRate()
             setTimeout(startSubtitlesHandler, 1000)
 
@@ -1020,7 +1119,9 @@ const displayPlaybackRate = () => {
         playbackRateElement.innerHTML = `${rate}x`
 
         window.dispatchEvent(new Event('resize'));
-    } else if (videoElement) {
+    }
+
+    if (videoElement) {
         const rate = getPlaybackRate(LS_USER_PREF_VIDEO_PLAYBACK_RATE)
         const durationWrapper = document.querySelector('#vjs_video_3 > div.vjs-control-bar > div.vjs-control-group.vjs-progress-group > div.vjs-control-group.vjs-time-display-group')
 
@@ -1042,13 +1143,15 @@ function setRate(rate, rateHandlerElements, lsKey) {
     if (!rateHandlerSelector) {
         rateHandlerSelector = rateHandlerElements['1']
     }
+
     const rateHandler = document.querySelector(rateHandlerSelector)
     if (rateHandler) {
         rateHandler.click()
         localStorage.setItem(lsKey, rate.toString())
         displayPlaybackRate(lsKey)
+        return rate
     }
-    return rate
+    return null
 }
 
 const setPlaybackRate = (rate) => {
@@ -1059,16 +1162,13 @@ const setPlaybackRate = (rate) => {
             audioElement.playbackRate = actualRate
             localStorage.setItem(LS_USER_PREF_AUDIO_PLAYBACK_RATE, actualRate.toString())
             displayPlaybackRate(LS_USER_PREF_AUDIO_PLAYBACK_RATE)
-            return actualRate
         } else if (isJW) {
-            return setRate(rate, JW_AUDIO_RATE_SELECTORS, LS_USER_PREF_AUDIO_PLAYBACK_RATE);
-        } else {
-            return null
+            setRate(rate, JW_AUDIO_RATE_SELECTORS, LS_USER_PREF_AUDIO_PLAYBACK_RATE);
         }
-    } else if (videoElement && isJW) {
-        return setRate(rate, JW_VIDEO_RATE_SELECTORS, LS_USER_PREF_VIDEO_PLAYBACK_RATE);
     }
-    return null
+    if (videoElement && isJW) {
+        setRate(rate, JW_VIDEO_RATE_SELECTORS, LS_USER_PREF_VIDEO_PLAYBACK_RATE);
+    }
 }
 
 const getSearchField = () => {
@@ -1170,6 +1270,8 @@ const updateSelectionsInLocalStorage = (id, html) => {
     currentData.selection = remainingSelections
     userData[key] = currentData
     localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(userData))
+
+    usageTracking('delete_selection')
 }
 
 const getFromLocalStorage = (type) => {
@@ -1215,6 +1317,8 @@ const addToLocalStorage = (type, value) => {
     userData[key] = currentDataComplete
 
     localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(userData))
+
+    usageTracking(type)
 }
 
 let setPreventSearchFocus = () => {
@@ -1307,7 +1411,6 @@ const getMarkers = async () => {
         const isEnoughData = !!url && !!langWritten
 
         if (!isEnoughData) {
-            console.info('not enough jw data to get markers', {url})
             return;
         }
 
@@ -1328,9 +1431,11 @@ const getMarkers = async () => {
 chrome.runtime.onMessage.addListener(
     (request, sender, sendResponse) => {
         if (request.type === 'request_shortcuts') {
+            usageTracking('request_shortcuts')
             sendResponse(SHORTCUTS);
         }
         if (request.type === 'url_changed') {
+            usageTracking('url_changed')
             initJWRefinedDeferred(500)
         }
         return true;
