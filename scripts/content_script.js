@@ -606,7 +606,7 @@ const SHORTCUTS = {
     'W': {
         keys: ['Shift', 'W'],
         description: "Go to Bible or Bible Teachings",
-        action: ({event, document}) => {
+        action: ({document}) => {
             const selectors = ['#menuBible > a']
             return !!clickFirstFromList(selectors, document)
         }
@@ -614,7 +614,7 @@ const SHORTCUTS = {
     'E': {
         keys: ['Shift', 'E'],
         description: "Go to Publications",
-        action: ({event, document}) => {
+        action: ({document}) => {
             const selectors = ['#menuPublications > a']
             return !!clickFirstFromList(selectors, document)
         }
@@ -622,7 +622,7 @@ const SHORTCUTS = {
     'R': {
         keys: ['Shift', 'R'],
         description: "Go to Meetings",
-        action: ({event, document}) => {
+        action: ({document}) => {
             const selectors = ['#menuToday > a']
             return !!clickFirstFromList(selectors, document)
         }
@@ -639,7 +639,7 @@ const SHORTCUTS = {
     'A': {
         keys: ['Shift', 'A'],
         description: "Go to Home",
-        action: ({event, document}) => {
+        action: ({document}) => {
             const selectors = ['#menuHome > a', '#siteLogo']
             return !!clickFirstFromList(selectors, document)
         }
@@ -647,7 +647,7 @@ const SHORTCUTS = {
     'S': {
         keys: ['Shift', 'S'],
         description: "Share",
-        action: ({event, document}) => {
+        action: ({document}) => {
             const selectors = ['#shareButtonFooter', '.jsShare',]//'#article > div > div > div > div.jsShareButtonContainer.shareButtonWrapper > button', '#article > div.articleFooterLinks > div.articleShareLinks > div > button']
 
             clickFirstFromList(selectors, document)
@@ -666,7 +666,7 @@ const SHORTCUTS = {
     'F': {
         keys: ['Shift', 'F'],
         description: "Toggle fullscreen",
-        action: ({event, document}) => {
+        action: ({document}) => {
             const selectors = ['#vjs_video_3 button.vjs-fullscreen-control']
             return !!clickFirstFromList(selectors, document)
         }
@@ -674,7 +674,7 @@ const SHORTCUTS = {
     'L': {
         keys: ['Shift', 'L'],
         description: "Go to Languages",
-        action: ({event, document}) => {
+        action: ({document}) => {
             const selectors = ['#libraryTitle > a', '#siteHeader > div.siteFeaturesContainer > a.tertiaryButton.siteFeaturesItem.jsChooseSiteLanguage']
             return !!clickFirstFromList(selectors, document)
         }
@@ -682,7 +682,7 @@ const SHORTCUTS = {
     'C': {
         keys: ['Shift', 'C'],
         description: "Toggle captions",
-        action: ({event, document}) => {
+        action: ({document}) => {
             const selectors = ['#vjs_video_3 > div:nth-child(10) > ul > li.vjs-menu-item.vjs-menu-item-radio:not(.vjs-selected)']
 
             return !!clickFirstFromList(selectors, document)
@@ -795,7 +795,7 @@ const SHORTCUTS = {
     ',': {
         keys: [','],
         description: "Go to Settings",
-        action: ({event, document}) => {
+        action: ({document}) => {
             const selectors = ['#menuToolsPreferences > a']
             return !!clickFirstFromList(selectors, document)
         }
