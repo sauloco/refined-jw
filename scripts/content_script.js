@@ -125,14 +125,11 @@ const startSubtitlesHandler = async () => {
                 const parser = new WebVTT.Parser(window, WebVTT.StringDecoder())
 
                 const cues = []
-                const regions = [];
 
                 parser.oncue = function (cue) {
                     cues.push(cue);
                 };
-                parser.onregion = function (region) {
-                    regions.push(region);
-                }
+
                 parser.parse(vtt);
                 parser.flush();
 
