@@ -807,6 +807,13 @@ const SHORTCUTS = {
             event.preventDefault()
             event.stopPropagation()
             const maybeJWVideoPlayButtonElement = document.querySelector('#vjs_video_3 > button')
+            let maybeJWVideoPlayButtonElementVisible = false
+            if (maybeJWVideoPlayButtonElement) {
+                const playButtonStyle = window.getComputedStyle(maybeJWVideoPlayButtonElement) || {}
+                if (playButtonStyle.display !== 'none') {
+                    maybeJWVideoPlayButtonElementVisible = true
+                }
+            }
 
             if (audioElement && !!audioElement.src) {
                 const rate = getPlaybackRate()
@@ -816,11 +823,8 @@ const SHORTCUTS = {
                 } else {
                     audioElement.pause()
                 }
-            } else if (isJW && maybeJWVideoPlayButtonElement) {
-                const playButtonStyle = window.getComputedStyle(maybeJWVideoPlayButtonElement) || {}
-                if (playButtonStyle.display !== 'none') {
-                    maybeJWVideoPlayButtonElement.click()
-                }
+            } else if (isJW && maybeJWVideoPlayButtonElementVisible) {
+                maybeJWVideoPlayButtonElement.click()
             } else if (videoElement && !!videoElement.src) {
                 const rate = getPlaybackRate()
                 setPlaybackRate(rate)
@@ -829,6 +833,7 @@ const SHORTCUTS = {
                 } else {
                     videoElement.pause()
                 }
+
             } else {
                 console.info('no audio or video element')
             }
