@@ -843,7 +843,8 @@ const SHORTCUTS = {
             event.preventDefault()
             event.stopPropagation()
 
-            const rate = getPlaybackRate()
+            const isAudio = !!audioElement && !!audioElement.src
+            const rate = getPlaybackRate(isAudio ? LS_USER_PREF_AUDIO_PLAYBACK_RATE : LS_USER_PREF_VIDEO_PLAYBACK_RATE)
 
             const availablePlaybackRates = getAvailablePlaybackRates()
             const currentRateIndex = availablePlaybackRates.indexOf(rate)
@@ -860,7 +861,8 @@ const SHORTCUTS = {
             event.preventDefault()
             event.stopPropagation()
 
-            const rate = getPlaybackRate()
+            const isAudio = !!audioElement && !!audioElement.src
+            const rate = getPlaybackRate(isAudio ? LS_USER_PREF_AUDIO_PLAYBACK_RATE : LS_USER_PREF_VIDEO_PLAYBACK_RATE)
 
             const availablePlaybackRates = getAvailablePlaybackRates()
             const currentRateIndex = availablePlaybackRates.indexOf(rate)
@@ -1019,7 +1021,7 @@ const displayPlaybackRate = () => {
 
         window.dispatchEvent(new Event('resize'));
     } else if (videoElement) {
-        const rate = getPlaybackRate()
+        const rate = getPlaybackRate(LS_USER_PREF_VIDEO_PLAYBACK_RATE)
         const durationWrapper = document.querySelector('#vjs_video_3 > div.vjs-control-bar > div.vjs-control-group.vjs-progress-group > div.vjs-control-group.vjs-time-display-group')
 
         let playbackRateElement = document.querySelector('.refined-jw-audio-rate')
