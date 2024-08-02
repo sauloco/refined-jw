@@ -33,6 +33,7 @@
     --gray: var(--light-gray);
 
     --text-color: var(--text-color-in-light);
+    --text-color-opposite: var(--text-color-in-dark);
     --link-color: var(--link-color-in-light);
     --box-color: var(--box-bg-color-in-light);
 
@@ -87,10 +88,10 @@
 
 kbd {
 
-    --bg-color: var(--kbd-color-background);
-    --border-color: var(--kbd-color-border);
-    --text-color: var(--kbd-color-border);
-    --shadow-color: var(--kbd-color-border);
+    --bg-color: var(--popup-kbd-color-background);
+    --border-color: var(--popup-kbd-color-border);
+    --text-color: var(--popup-kbd-color-border);
+    --shadow-color: var(--popup-kbd-color-border);
 
     &.refined-jw-yellow-bg {
         --bg-color: var(--yellow);
@@ -246,6 +247,7 @@ textarea {
         --gray: var(--dark-gray);
 
         --text-color: var(--text-color-in-dark);
+        --text-color-opposite: var(--text-color-in-light);
         --link-color: var(--link-color-in-dark);
         --box-color: var(--box-bg-color-in-dark);
 
@@ -285,11 +287,10 @@ textarea {
     /* Final state of the exit animation */
     opacity: 0;
 
-    transition:
-            opacity 0.7s,
-            transform 0.7s,
-            overlay 0.7s allow-discrete,
-            display 0.7s allow-discrete;
+    transition: opacity 0.7s,
+    transform 0.7s,
+    overlay 0.7s allow-discrete,
+    display 0.7s allow-discrete;
     /* Equivalent to
     transition: all 0.7s allow-discrete; */
 
@@ -341,6 +342,213 @@ to take effect, as the specificity is the same */
     line-break: anywhere;
 }
 
+.jw-refined-hint.open {
+    transition: height .5s;
+
+    height: 80vh;
+
+    opacity: 1;
+    pointer-events: unset;
+
+    overflow: hidden;
+
+    > * {
+        transition: opacity 1s;
+
+        opacity: 1;
+        pointer-events: unset;
+    }
+}
+
+@keyframes revert-overflow {
+    from {
+        overflow-y: hidden;
+    }
+
+    to {
+        overflow-y: auto;
+    }
+}
+
+.jw-refined-hint {
+    transition: height .5s;
+
+    position: fixed;
+    top: 0;
+    right: 1rem;
+    width: min(90%, 800px);
+    height: 0;
+    z-index: 999999;
+    box-sizing: border-box;
+
+    overflow: hidden;
+
+    border-radius: 0 0 .5rem .5rem;
+    backdrop-filter: blur(1rem);
+    box-shadow: rgba(0, 0, 0, 0.8) 0 0 50px;
+
+    opacity: 0;
+    pointer-events: none;
+
+    > * {
+        transition: opacity 1s;
+
+        opacity: 0;
+        pointer-events: none;
+    }
+
+    .shortcuts-container {
+        padding-top: 1rem;
+        position: absolute;
+        inset: 0;
+        box-sizing: border-box;
+
+        overflow-x: hidden;
+        overflow-y: auto;
+
+        scrollbar-width: thin;
+        scrollbar-color: var(--popup-kbd-color-border) var(--popup-color-background);
+
+        animation-duration: 0s;
+        animation-delay: .5s;
+        animation-name: revert-overflow;
+        animation-fill-mode: forwards;
+
+        .note {
+            border-top: var(--popup-color-border) solid 1px;
+        }
+
+    }
+
+    .jw-refined-hint-close {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        padding: 0.5rem;
+        border-radius: 100% 100%;
+        width: 2rem;
+        height: 2rem;
+        display: flex;
+
+        justify-content: center;
+        align-items: center;
+
+        cursor: pointer;
+        background-color: var(--popup-color-background);
+
+        color: var(--popup-color-text);
+        outline: var(--popup-color-border) solid 1px;
+
+        user-select: none;
+
+    }
+}
+
+.jw-refined-button-hint {
+
+    @media screen and (min-width: 1201px) {
+        position: fixed;
+        top: 0;
+        right: 1rem;
+        width: 32px;
+        height: 0;
+        z-index: 999998;
+
+        background: none !important;
+
+        animation: appear-icon;
+        animation-delay: 0s;
+        animation-duration: 0.7s;
+        animation-timing-function: ease-in-out;
+        animation-fill-mode: forwards;
+
+        border: none !important;
+        margin: 0 !important;
+    }
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    cursor: pointer !important;
+    padding: 0 !important;
+
+    .buttonIcon {
+        width: 48px;
+        display: flex;
+        justify-content: center;
+
+        @media screen and (min-width: 1201px) {
+            display: block;
+            width: 32px;
+        }
+
+        > img {
+            width: 32px;
+            border-radius: .5rem;
+            vertical-align: unset !important;
+            object-fit: contain;
+
+            @media screen and (min-width: 1201px) {
+                border-radius: 0 0 .5rem .5rem;
+            }
+        }
+    }
+
+    .buttonText {
+        display: unset;
+
+        @media screen and (min-width: 1201px) {
+            display: none !important;
+        }
+    }
+
+    .icon {
+        width: 48px;
+        display: flex;
+        justify-content: center;
+
+        @media screen and (min-width: 1201px) {
+            width: 32px;
+        }
+
+        > img {
+            width: 32px;
+            border-radius: .5rem;
+            vertical-align: unset !important;
+            object-fit: contain;
+
+            @media screen and (min-width: 1201px) {
+                border-radius: 0 0 .5rem .5rem;
+            }
+        }
+    }
+
+
+    .label {
+        display: unset;
+
+        @media screen and (min-width: 1201px) {
+            display: none !important;
+        }
+    }
+
+}
+
+@keyframes appear-icon {
+    from {
+        height: 0;
+    }
+
+    to {
+        height: 32px;
+    }
+}
+
 #download-vtt {
     width: max-content;
+}
+
+.with-action {
+    cursor: pointer;
 }

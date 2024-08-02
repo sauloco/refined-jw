@@ -1,0 +1,108 @@
+:root {
+    --popup-color-background: #f1f1f1;
+    --popup-color-background-semitransparent: #f1f1f1CC;
+    --popup-color-border: #cccccc;
+    --popup-color-text: #2c2c2c;
+    --popup-color-accent: #2c2c2c;
+    --popup-kbd-color-background: #e5e5e5;
+    --popup-kbd-color-border: #afafaf;
+    --popup-kbd-color-text: #242424;
+}
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        --popup-color-background: #242424;
+        --popup-color-background-semitransparent: #242424CC;
+        --popup-color-border: #2c2c2c;
+        --popup-color-text: #d2d2d2;
+        --popup-color-accent: #f1f1f1;
+        --popup-kbd-color-background: #212121;
+        --popup-kbd-color-border: #d2d2d2;
+        --popup-kbd-color-text: #f1f1f1;
+    }
+
+}
+
+.cell {
+    flex: 1;
+    display: flex;
+    width: 100%;
+    gap: .5em;
+    padding-left: 1.5em;
+    padding-right: 1.5em;
+    align-items: center;
+    box-sizing: border-box;
+}
+
+.cell:last-of-type {
+    padding-bottom: 1.5em;
+}
+
+
+kbd {
+
+    background-color: var(--popup-kbd-color-background);
+    color: var(--popup-kbd-color-border);
+
+    border-radius: 0.25rem;
+
+    border: 1px solid var(--popup-kbd-color-border);
+    box-shadow: 0 2px 0 1px var(--popup-kbd-color-border);
+
+    cursor: default;
+
+    font-family: sans-serif;
+
+    font-size: 0.75em;
+
+    line-height: 1;
+
+
+    display: inline-block;
+    text-align: center;
+
+    padding: 2px 5px !important;
+
+    position: relative;
+    top: -1px;
+
+}
+
+kbd:hover {
+    box-shadow: 0 1px 0 0.5px var(--popup-kbd-color-border);
+    top: 1px;
+}
+
+.shortcuts-container {
+    font: 13px/1.231 arial, helvetica, clean, sans-serif; /* YUI Font Reset */
+
+    background: var(--popup-color-background-semitransparent);
+    color: var(--popup-color-text);
+
+    display: flex;
+    flex-direction: column;
+    gap: 1em;
+}
+
+blockquote {
+    margin: 0 !important;
+    padding: 1rem !important;
+    border-left: 5px solid var(--opposite-purple);
+    background-color: var(--purple);
+    color: var(--opposite-purple);
+    font-size: .8rem;
+    line-height: .8rem;
+}
+
+.note {
+    padding: 1rem;
+
+    > a {
+        color: var(--popup-color-text);
+        text-decoration: underline;
+
+        :hover {
+            text-decoration: none;
+        }
+    }
+}

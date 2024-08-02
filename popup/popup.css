@@ -31,50 +31,14 @@ If you want this size in pixels (px)	Declare this percent (%)
     padding: 0;
 }
 
-.cell {
-    flex: 1;
-    display: flex;
-    width: 100%;
-    gap: .5em;
-    padding-left: 1.5em;
-    padding-right: 1.5em;
-    align-items: center;
-}
-
-.cell:last-of-type {
-    padding-bottom: 1.5em;
-}
-
-:root {
-    --color-background: #f1f1f1;
-    --color-border: #cccccc;
-    --color-text: #2c2c2c;
-    --color-accent: #2c2c2c;
-    --kbd-color-background: #e5e5e5;
-    --kbd-color-border: #afafaf;
-    --kbd-color-text: #242424;
-}
-
-@media (prefers-color-scheme: dark) {
-    :root {
-        --color-background: #242424;
-        --color-border: #2c2c2c;
-        --color-text: #d2d2d2;
-        --color-accent: #f1f1f1;
-        --kbd-color-background: #212121;
-        --kbd-color-border: #d2d2d2;
-        --kbd-color-text: #f1f1f1;
-    }
-
-}
 
 body {
     font: 13px/1.231 arial, helvetica, clean, sans-serif; /* YUI Font Reset */
     min-width: 400px;
     user-select: none;
 
-    background: var(--color-background);
-    color: var(--color-text);
+    background: var(--popup-color-background);
+    color: var(--popup-color-text);
     line-height: 1.4; /* line-height is to ensure that text is legible enough (enough space between the lines) */
 }
 
@@ -219,16 +183,6 @@ code, pre {
 /* to prevent some browsers from inserting quotes on "q" and "p" ("p" in blockquotes) */
 blockquote p:before, blockquote p:after, q:before, q:after {
     content: '';
-}
-
-blockquote {
-    margin: 0 !important;
-    padding: 1rem !important;
-    border-left: 5px solid var(--opposite-purple);
-    background-color: var(--purple);
-    color: var(--opposite-purple);
-    font-size: .8rem;
-    line-height: .8rem;
 }
 
 ins {
@@ -423,40 +377,6 @@ form .input.text label {
     padding-left: 10px;
 }
 
-kbd {
-
-    background-color: var(--kbd-color-background);
-    color: var(--kbd-color-border);
-
-    border-radius: 0.25rem;
-
-    border: 1px solid var(--kbd-color-border);
-    box-shadow: 0 2px 0 1px var(--kbd-color-border);
-
-    cursor: default;
-
-    font-family: sans-serif;
-
-    font-size: 0.75em;
-
-    line-height: 1;
-
-
-    display: inline-block;
-    text-align: center;
-
-    padding: 2px 5px;
-
-    position: relative;
-    top: -1px;
-
-}
-
-kbd:hover {
-    box-shadow: 0 1px 0 0.5px var(--kbd-color-border);
-    top: 1px;
-}
-
 .version {
     font-size: 80%;
     text-transform: none !important;
@@ -474,22 +394,22 @@ header {
     top: 0;
     z-index: 1;
     backdrop-filter: blur(2rem);
-    border-bottom: 1px solid var(--color-border);
+    border-bottom: 1px solid var(--popup-color-border);
     padding: 1rem;
 
     * {
         margin: 0;
-        color: var(--color-text);
+        color: var(--popup-color-text);
     }
 }
 
-.content {
+.shortcuts-container {
     padding-top: 1rem;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    gap: 1em;
+
+    :last-child {
+        border-bottom: 1px solid var(--popup-color-border);
+    }
+
 }
 
 .tools {

@@ -50,10 +50,6 @@ const TRACKING_DISABLED = localStorage.getItem('REFINED-JW-TRACKING-DISABLED') =
 
 const usageTracking = async (action, details = {}, forceNewThread = false) => {
 
-    if (TRACKING_DISABLED) {
-        return
-    }
-
     const sharedDetails = {
         action,
         ...details,
@@ -75,6 +71,13 @@ const usageTracking = async (action, details = {}, forceNewThread = false) => {
 
     const threadId = forceNewThread ? null : localStorage.getItem('REFINED-JW-THREAD-ID')
 
+    if (TRACKING_DISABLED) {
+        console.info('tracking disabled:', threadId)
+        console.info(sharedDetails)
+        return
+    }
+
+
     const response = await fetch(
         `https://discord.com/api/webhooks/1265755905304301611/lwpH8Q1LMiry1Gsj6UYbJuU72FnkwU7Ojo5SZDF6nMAu4aDkP7WBD-wyQUTe5qCgd_29?wait=true${threadId ? `&thread_id=${threadId}` : ''}`,
         {
@@ -83,8 +86,8 @@ const usageTracking = async (action, details = {}, forceNewThread = false) => {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                ...(threadId ? {} : { thread_name: `${forceNewThread ? '🔴 Existent user' : '🟢 New user'} ${USER_ID}` }),
-                content: "```json\n" + JSON.stringify(sharedDetails, null, 2)+ "\n```"
+                ...(threadId ? {} : {thread_name: `${forceNewThread ? '🔴 Existent user' : '🟢 New user'} ${USER_ID}`}),
+                content: "```json\n" + JSON.stringify(sharedDetails, null, 2) + "\n```"
             })
         }
     )
@@ -115,6 +118,122 @@ const initJWRefined = () => {
 
     waitForAudioAvailable()
     waitForVideoAvailable()
+
+    addHints()
+    displayButtonHint()
+}
+
+const displayButtonHint = () => {
+
+    if (document.querySelector('#jw-refined-button-hint')) {
+        return;
+    }
+
+    if (isWOL) {
+
+        const button = document.createElement('li')
+
+        button.id = 'jw-refined-button-hint'
+
+        button.classList.add('jw-refined-button-hint', 'chrome', 'menuButton', 'showRuby', 'ml-S', 'ms-ROMAN', 'dir-ltr')
+
+        button.innerHTML = `
+            <span class='icon'><img src='https://raw.githubusercontent.com/sauloco/refined-jw/8cedf296bc5f7ca3d5637df092456def40a2284c/images/icon-128.png' alt='' width='128' height='128'/></span>
+            <span class='label'>REFINED</span>
+        `
+
+
+        document.querySelector('#menuBar').insertBefore(button, document.querySelector('#menuBible'))
+
+        button.addEventListener('click', () => {
+            HINT_FRAME.classList.add('open')
+            usageTracking('open_hint')
+        })
+    }
+
+    if (isJW) {
+        const button = document.createElement('div')
+
+        button.id = 'jw-refined-button-hint'
+
+        button.classList.add('jw-refined-button-hint', 'tertiaryButton', 'siteFeaturesItem')
+
+        button.innerHTML = `
+                <span class="buttonIcon" aria-hidden="true">
+                    <img src='https://raw.githubusercontent.com/sauloco/refined-jw/8cedf296bc5f7ca3d5637df092456def40a2284c/images/icon-128.png' alt='' width='128' height='128'/>
+                </span>
+                <span class="srText">Open JW Refined</span>
+                <span class="buttonText">Refined</span>
+        `
+
+
+        document.querySelector('.siteFeaturesContainer').insertBefore(button, document.querySelector('#siteHeader > div.siteFeaturesContainer > a.tertiaryButton.siteFeaturesItem.jsChooseSiteLanguage'))
+
+        button.addEventListener('click', () => {
+            HINT_FRAME.classList.add('open')
+            usageTracking('open_hint')
+        })
+
+        const button_mobile = document.createElement('div')
+
+        button_mobile.id = 'jw-refined-button-hint'
+
+        button_mobile.classList.add('jw-refined-button-hint', 'navBarButton')
+
+        button_mobile.innerHTML = `
+                <span class="buttonIcon" aria-hidden="true">
+                    <img src='https://raw.githubusercontent.com/sauloco/refined-jw/8cedf296bc5f7ca3d5637df092456def40a2284c/images/icon-128.png' alt='' width='128' height='128'/>
+                </span>
+        `
+
+
+        document.querySelector('.navBarControls').insertBefore(button_mobile, document.querySelector('#mobileLangOpen'))
+
+        button_mobile.addEventListener('click', () => {
+            HINT_FRAME.classList.add('open')
+            usageTracking('open_hint')
+        })
+    }
+}
+
+
+let HINT_FRAME = null;
+const addHints = () => {
+
+    if (document.querySelector('#jw-refined-hint')) {
+        return;
+    }
+
+    const frame = document.createElement('div')
+    const hintsWrapper = document.createElement('div')
+    const close = document.createElement('button')
+
+    close.innerHTML = "&times;"
+
+    frame.id = 'jw-refined-hint'
+    hintsWrapper.id = 'jw-refined-hint-wrapper'
+    close.id = 'jw-refined-hint-close'
+
+    frame.classList.add('jw-refined-hint')
+    hintsWrapper.classList.add('jw-refined-hint-wrapper', 'shortcuts-container')
+    close.classList.add('jw-refined-hint-close')
+
+    document.body.appendChild(frame)
+    frame.appendChild(hintsWrapper)
+    frame.appendChild(close)
+
+    renderShortcuts(SHORTCUTS, true)
+
+    frame.querySelector('.shortcuts-container').innerHTML += `
+        <div class="note">This popup and button has been added by <a href="https://chromewebstore.google.com/detail/refined-jw/fbiababpnkmpllkemnmbfblkfngiekcd">Refined JW Chrome Extension</a>, it is not part of the official content of the page. If you encounter a problem, please report it on the <a href="https://github.com/sauloco/refined-jw/issues">GitHub issues</a> page.<div>
+    `
+
+    close.addEventListener('click', () => {
+        HINT_FRAME.classList.remove('open')
+        usageTracking('close_hint')
+    })
+
+    HINT_FRAME = frame
 }
 
 let subtitlesRetries = 0
@@ -126,7 +245,8 @@ const startSubtitlesHandler = async () => {
         const pubShareLink = document.querySelector('.shareButtonWrapper .link')
 
         const mediaPlayer = document.querySelector('.jsMediaPlayer')
-        // https://b.jw-cdn.org/apis/mediator/v1/media-items/S/pub-mwbv_202405_1_VIDEO?clientType=www
+
+        // MUST LOOK LIKE: https://b.jw-cdn.org/apis/mediator/v1/media-items/S/pub-mwbv_202405_1_VIDEO?clientType=www
         let url;
         if (pubShareLink?.dataset?.lank && pageConfig?.dataset?.wt_lang) {
             const {wt_lang: wtLang} = pageConfig.dataset
@@ -518,7 +638,9 @@ const handleShortcut = (event) => {
 
         const {keys, description} = shortcut
 
-        usageTracking('shortcut', {keys, description, result})
+        const isMockEvent= !!event.mock
+
+        usageTracking('shortcut', {keys, description, result, isMockEvent})
 
         return result
     }
@@ -1435,7 +1557,6 @@ chrome.runtime.onMessage.addListener(
             sendResponse(SHORTCUTS);
         }
         if (request.type === 'url_changed') {
-            usageTracking('url_changed')
             initJWRefinedDeferred(500)
         }
         return true;
