@@ -31,6 +31,8 @@ const JW_VIDEO_RATE_SELECTORS = {
     '0.6': '#vjs_video_3 > div:nth-child(11) > ul > li:nth-child(9)'
 }
 
+const MEDIA_TITLE_SELECTORS = ['.mediaItemTitle', 'header > h1']
+
 let isRecurrentUser = false
 const getUserId = () => {
     const userId = localStorage.getItem('REFINED-JW-USER-ID')
@@ -106,6 +108,7 @@ if (!isRecurrentUser) {
 
 const initJWRefined = () => {
 
+
     initAllInputs();
 
     loadComments();
@@ -113,15 +116,40 @@ const initJWRefined = () => {
     setSearchFocusStatus();
 
     setTimeout(() => loadSelections(), 1000)
+    setTimeout(() => crawlForSeenLinks(), 1000)
 
     startShortcuts()
-
+    resetMediaData()
     waitForAudioAvailable()
     waitForVideoAvailable()
 
     addHints()
     displayButtonHint()
+
 }
+
+const crawlForSeenLinks = () => {
+    const links = document.querySelectorAll('a:not(:has(img))') // all links without image inside
+
+    for (const link of links) {
+        if (!link.href) {
+            continue
+        }
+        const url = link.href.startsWith('/')
+            ? (isWOL
+                    ? 'https://wol.jw.org' + link.href
+                    : 'https://jw.org' + link.href
+            )
+            : link.href
+        const seen = getFromLocalStorage('seen', url)
+        if (seen) {
+            link.innerHTML += getSeenIndicator()
+        }
+    }
+}
+
+// const getSeenIndicator = () => `<span class="badge seen">Seen</span>`
+const getSeenIndicator = () => `<img class="seen" src="https://raw.githubusercontent.com/sauloco/refined-jw/8cedf296bc5f7ca3d5637df092456def40a2284c/images/seen.svg"/>`
 
 const displayButtonHint = () => {
 
@@ -195,7 +223,13 @@ const displayButtonHint = () => {
         })
     }
 }
+let mediaDuration = 0
+let seenShown = false
 
+const resetMediaData = () => {
+    mediaDuration = 0
+    seenShown = false
+}
 
 let HINT_FRAME = null;
 const addHints = () => {
@@ -282,7 +316,10 @@ const startSubtitlesHandler = async () => {
                     console.info('no subtitles found')
                     return
                 }
-                const {subtitles: {url: subsUrl}} = firstFileWithSubtitles
+
+                const {duration, subtitles: {url: subsUrl}} = firstFileWithSubtitles
+                mediaDuration = duration
+                displaySeenStatus()
                 subtitlesUrl = subsUrl
             } else {
                 const {files} = jsonResponse
@@ -294,6 +331,8 @@ const startSubtitlesHandler = async () => {
                     found = false
                     for (const file of format) {
                         if (file.subtitles) {
+                            mediaDuration = file.duration
+                            displaySeenStatus()
                             subtitlesUrl = file.subtitles.url
                             found = true
                             break
@@ -638,7 +677,7 @@ const handleShortcut = (event) => {
 
         const {keys, description} = shortcut
 
-        const isMockEvent= !!event.mock
+        const isMockEvent = !!event.mock
 
         usageTracking('shortcut', {keys, description, result, isMockEvent})
 
@@ -765,17 +804,28 @@ function highlightWithColor(document, color) {
     return false
 }
 
-
-function clickFirstFromList(selectors, document, ignoreVisibility = true) {
+function getFirstElFromList(selectors, document, ignoreVisibility = true) {
     for (const selector of selectors) {
-        const btn = document.querySelector(selector)
-        const isVisible = ignoreVisibility || btn && btn.offsetParent !== null
-        if (btn && isVisible) {
-            btn.click()
-            setPreventSearchFocus()
-            return btn;
+        const el = document.querySelector(selector)
+        const isVisible = ignoreVisibility || el && el.offsetParent !== null
+        if (el) {
+            return {el, isVisible}
         }
     }
+    return null
+}
+
+function clickFirstFromList(selectors, document, ignoreVisibility = true) {
+    const result = getFirstElFromList(selectors, document, ignoreVisibility)
+    if (result) {
+        const {el, isVisible} = result
+        if (el && isVisible) {
+            el.click()
+            setPreventSearchFocus()
+            return el;
+        }
+    }
+
 }
 
 function getPlaybackRate(lsKey = LS_USER_PREF_AUDIO_PLAYBACK_RATE) {
@@ -1205,7 +1255,10 @@ const waitForVideoAvailable = () => {
             }
             videoElement = video
             videoElement.playbackRate = getPlaybackRate(LS_USER_PREF_VIDEO_PLAYBACK_RATE)
+            videoElement.addEventListener('timeupdate', updateSeenStatus)
+            videoElement.addEventListener('timeupdate', displaySeenStatus)
             displayPlaybackRate()
+            displaySeenStatus()
             setTimeout(startSubtitlesHandler, 1000)
 
             if (isJW) {
@@ -1218,6 +1271,45 @@ const waitForVideoAvailable = () => {
             }
         }
     }, 500)
+}
+
+const updateSeenStatus = (ev) => {
+    addToLocalStorage('current_time', ev.target.currentTime)
+}
+
+const displaySeenStatus = () => {
+    const previouslySeen = getFromLocalStorage('seen')
+
+    const time = getFromLocalStorage('current_time')
+
+    if (!mediaDuration) {
+        if (audioElement) {
+            audioElement.currentTime = time
+            mediaDuration = audioElement.duration
+        }
+
+        if (videoElement) {
+            videoElement.currentTime = time
+            mediaDuration = videoElement.duration
+        }
+
+        if (!mediaDuration) {
+            setTimeout(displaySeenStatus, 1000)
+        }
+    }
+
+    if ((previouslySeen || time > mediaDuration * .9) && !seenShown) {
+        if (!previouslySeen) {
+            addToLocalStorage('seen', true)
+        }
+
+        const result = getFirstElFromList(MEDIA_TITLE_SELECTORS, document)
+        if (result) {
+            const { el } = result
+            el.innerHTML += getSeenIndicator()
+            seenShown = true
+        }
+    }
 }
 
 const displayPlaybackRate = () => {
@@ -1370,11 +1462,11 @@ const LS_CURRENT_SHORTCUT = 'currentShortcut';
 
 const LOCAL_STORAGE_KEY = 'REFINED-JW-USER-DATA'
 
-const updateSelectionsInLocalStorage = (id, html) => {
+const updateSelectionsInLocalStorage = (id, html, uri = window.location.href) => {
 
     const userData = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY) || "{}")
 
-    const key = encodeURIComponent(window.location.href.replace(window.location.hash, ""))
+    const key = uriToKey(uri)
     const currentData = userData[key] || {}
 
     const allSelections = currentData.selection || []
@@ -1396,23 +1488,40 @@ const updateSelectionsInLocalStorage = (id, html) => {
     usageTracking('delete_selection')
 }
 
-const getFromLocalStorage = (type) => {
+const uriToKey = (uri) => {
+    try {
+        const url = new URL(uri)
+        const {href, hash} = url
+        const finalUrl = isJW ? href : href.replace(hash, "")
+        return encodeURIComponent(finalUrl)
+    } catch (e) {
+        console.error(e)
+        console.error(uri)
+        return uri
+    }
+}
+
+const getFromLocalStorage = (type, uri = window.location.href) => {
 
     const userData = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY) || "{}")
 
-    const key = encodeURIComponent(window.location.href.replace(window.location.hash, ""))
+    const key = uriToKey(uri)
     const currentData = userData[key] || "{}"
 
     if (type === 'comment') {
         return currentData[type] || {}
     } else if (type === 'selection') {
         return currentData[type] || []
+    } else if (type === 'current_time') {
+        return currentData[type] || 0
+    } else if (type === 'seen') {
+        return currentData[type] || false
     } else {
         console.error('unknown type', type)
     }
 }
 
-const addToLocalStorage = (type, value) => {
+const addToLocalStorage = (type, value, uri = window.location.href) => {
     let userDataOfType = getFromLocalStorage(type)
 
     if (type === 'comment') {
@@ -1425,13 +1534,17 @@ const addToLocalStorage = (type, value) => {
             ...userDataOfType || [],
             value
         ]
+    } else if (type === 'current_time') {
+        userDataOfType = value
+    } else if (type === 'seen') {
+        userDataOfType = value
     } else {
         console.error('unknown type', type)
     }
 
     const userData = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY) || "{}")
 
-    const key = encodeURIComponent(window.location.href.replace(window.location.hash, ""))
+    const key = uriToKey(uri)
     const currentDataComplete = userData[key] || {}
 
     currentDataComplete[type] = userDataOfType
@@ -1440,7 +1553,11 @@ const addToLocalStorage = (type, value) => {
 
     localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(userData))
 
-    usageTracking(type)
+    const trackedEvents = ['comment', 'selection']
+
+    if (trackedEvents.includes(type)) {
+        usageTracking(type)
+    }
 }
 
 let setPreventSearchFocus = () => {
@@ -1465,6 +1582,10 @@ let getCurrentShortcut = () => {
 
 let clearCurrentShortcut = () => {
     localStorage.removeItem(LS_CURRENT_SHORTCUT)
+}
+
+let setVideoCurrentTime = (time) => {
+
 }
 
 /*

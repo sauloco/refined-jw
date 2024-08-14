@@ -1,7 +1,7 @@
 {
   "name": "Refined JW",
   "description": "Enhance your reading experience of JW official site and Watchtower Online Library (WOL) with Refined JW",
-  "version": "1.4.4",
+  "version": "1.5.0",
   "manifest_version": 3,
   "background": {
     "service_worker": "./scripts/background.js"

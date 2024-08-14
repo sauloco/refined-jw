@@ -191,6 +191,10 @@ kbd {
         --bg-color: var(--opposite-purple);
     }
 
+    &.seen {
+        --bg-color: var(--opposite-blue);
+    }
+
     &.stopwatch {
         --bg-color: var(--blue);
         pointer-events: auto !important;
@@ -204,7 +208,7 @@ kbd {
     }
 
     background-color: var(--bg-color);
-    font-size: 80%;
+    font-size: 0.75rem;
     text-decoration: none;
     display: inline-block;
     padding: 0 0.5em;
