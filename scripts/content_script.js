@@ -33,6 +33,32 @@ const JW_VIDEO_RATE_SELECTORS = {
 
 const MEDIA_TITLE_SELECTORS = ['.mediaItemTitle', 'header > h1']
 
+const SEEN_INDICATOR_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" viewBox="0 0 25 25" fill="none" stroke="#4ab6fe" stroke-width="0.65"><g id="SVGRepo_iconCarrier"> <path d="M5.03033 11.4697C4.73744 11.1768 4.26256 11.1768 3.96967 11.4697C3.67678 11.7626 3.67678 12.2374 3.96967 12.5303L5.03033 11.4697ZM8.5 16L7.96967 16.5303C8.26256 16.8232 8.73744 16.8232 9.03033 16.5303L8.5 16ZM17.0303 8.53033C17.3232 8.23744 17.3232 7.76256 17.0303 7.46967C16.7374 7.17678 16.2626 7.17678 15.9697 7.46967L17.0303 8.53033ZM9.03033 11.4697C8.73744 11.1768 8.26256 11.1768 7.96967 11.4697C7.67678 11.7626 7.67678 12.2374 7.96967 12.5303L9.03033 11.4697ZM12.5 16L11.9697 16.5303C12.2626 16.8232 12.7374 16.8232 13.0303 16.5303L12.5 16ZM21.0303 8.53033C21.3232 8.23744 21.3232 7.76256 21.0303 7.46967C20.7374 7.17678 20.2626 7.17678 19.9697 7.46967L21.0303 8.53033ZM3.96967 12.5303L7.96967 16.5303L9.03033 15.4697L5.03033 11.4697L3.96967 12.5303ZM9.03033 16.5303L17.0303 8.53033L15.9697 7.46967L7.96967 15.4697L9.03033 16.5303ZM7.96967 12.5303L11.9697 16.5303L13.0303 15.4697L9.03033 11.4697L7.96967 12.5303ZM13.0303 16.5303L21.0303 8.53033L19.9697 7.46967L11.9697 15.4697L13.0303 16.5303Z" fill="#4bb6fe"/></g></svg>`
+
+
+const REFINED_JW_ICON_SVG = `<div style="background: linear-gradient(45deg, #279CE0 0%, #9F71C6 57%, #DB6A6D 81%, #F39949 100%); width: 48px; height: 48px;">
+<svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g clip-path="url(#clip0_7_61)">
+<path d="M48 0H0V48H48V0Z" fill="url(#paint0_linear_7_61)"/>
+<rect width="48" height="48" fill="white" fill-opacity="0.48"/>
+<path d="M9.94391 34.946C12.0658 34.946 13.6246 34.3152 14.6203 33.0378C15.6848 31.5412 16.2102 29.7407 16.1137 27.9199V12.75H13.2165V27.9838C13.2809 29.132 12.9693 30.2703 12.327 31.2334C12.0342 31.6265 11.6458 31.942 11.1968 32.1511C10.7479 32.3603 10.2527 32.4565 9.7562 32.431C8.96958 32.4369 8.19158 32.2705 7.47924 31.944C6.7264 31.5965 6.01712 31.1652 5.3655 30.6585L4.125 32.8941C4.89403 33.478 5.73259 33.9686 6.62231 34.3552C7.67421 34.7801 8.80642 34.9815 9.94391 34.946Z" fill="white"/>
+<path d="M24.0074 34.95H26.3548L31.4406 18.3524L36.0649 34.95H38.4748L43.725 12.75H40.8613C40.8613 12.75 37.4342 28.7753 37.2073 29.6136L32.6613 13.5964H30.3139L25.541 29.6136L22.1139 12.75H19.125L24.0074 34.95Z" fill="white"/>
+</g>
+<defs>
+<linearGradient id="paint0_linear_7_61" x1="5.48363e-07" y1="48" x2="53.882" y2="34.2505" gradientUnits="userSpaceOnUse">
+<stop stop-color="#279CE0"/>
+<stop offset="0.577786" stop-color="#9F71C6"/>
+<stop offset="0.816323" stop-color="#DB6A6D"/>
+<stop offset="1" stop-color="#F39949"/>
+</linearGradient>
+<clipPath id="clip0_7_61">
+<rect width="48" height="48" fill="white"/>
+</clipPath>
+</defs>
+</svg>
+</div>
+`
+
 let isRecurrentUser = false
 const getUserId = () => {
     const userId = localStorage.getItem('REFINED-JW-USER-ID')
@@ -108,6 +134,10 @@ if (!isRecurrentUser) {
 
 const initJWRefined = () => {
 
+    if (document.querySelector('.loading-indicator')) {
+        setTimeout(() => initJWRefined(), 250)
+        return
+    }
 
     initAllInputs();
 
@@ -129,7 +159,7 @@ const initJWRefined = () => {
 }
 
 const crawlForSeenLinks = () => {
-    const links = document.querySelectorAll('a:not(:has(img))') // all links without image inside
+    const links = document.querySelectorAll('a:has(> img)') // all links with image inside
 
     for (const link of links) {
         if (!link.href) {
@@ -143,13 +173,34 @@ const crawlForSeenLinks = () => {
             : link.href
         const seen = getFromLocalStorage('seen', url)
         if (seen) {
-            link.innerHTML += getSeenIndicator()
+            const overlay = link.querySelector('.syn-img-overlay')
+
+            if (overlay) {
+                overlay.append(getSeenIndicator())
+            } else {
+                link.append(getSeenIndicatorWithBackground())
+            }
         }
     }
 }
 
 // const getSeenIndicator = () => `<span class="badge seen">Seen</span>`
-const getSeenIndicator = () => `<img class="seen" src="https://raw.githubusercontent.com/sauloco/refined-jw/8cedf296bc5f7ca3d5637df092456def40a2284c/images/seen.svg"/>`
+const getSeenIndicator = () => {
+    const span = document.createElement('span')
+    span.classList.add('seen')
+    span.innerHTML = SEEN_INDICATOR_SVG
+
+    return span
+
+}
+
+const getSeenIndicatorWithBackground = () => {
+    const div = document.createElement('div')
+    div.classList.add('seen-inside-image')
+    div.innerHTML = SEEN_INDICATOR_SVG
+
+    return div
+}
 
 const displayButtonHint = () => {
 
@@ -166,7 +217,7 @@ const displayButtonHint = () => {
         button.classList.add('jw-refined-button-hint', 'chrome', 'menuButton', 'showRuby', 'ml-S', 'ms-ROMAN', 'dir-ltr')
 
         button.innerHTML = `
-            <span class='icon'><img src='https://raw.githubusercontent.com/sauloco/refined-jw/8cedf296bc5f7ca3d5637df092456def40a2284c/images/icon-128.png' alt='' width='128' height='128'/></span>
+            <span class='icon'>${REFINED_JW_ICON_SVG}</span>
             <span class='label'>REFINED</span>
         `
 
@@ -188,7 +239,7 @@ const displayButtonHint = () => {
 
         button.innerHTML = `
                 <span class="buttonIcon" aria-hidden="true">
-                    <img src='https://raw.githubusercontent.com/sauloco/refined-jw/8cedf296bc5f7ca3d5637df092456def40a2284c/images/icon-128.png' alt='' width='128' height='128'/>
+                    ${REFINED_JW_ICON_SVG}
                 </span>
                 <span class="srText">Open JW Refined</span>
                 <span class="buttonText">Refined</span>
@@ -210,7 +261,7 @@ const displayButtonHint = () => {
 
         button_mobile.innerHTML = `
                 <span class="buttonIcon" aria-hidden="true">
-                    <img src='https://raw.githubusercontent.com/sauloco/refined-jw/8cedf296bc5f7ca3d5637df092456def40a2284c/images/icon-128.png' alt='' width='128' height='128'/>
+                    ${REFINED_JW_ICON_SVG}
                 </span>
         `
 
@@ -804,9 +855,9 @@ function highlightWithColor(document, color) {
     return false
 }
 
-function getFirstElFromList(selectors, document, ignoreVisibility = true) {
+function getFirstElFromList(selectors, parent = document, ignoreVisibility = true) {
     for (const selector of selectors) {
-        const el = document.querySelector(selector)
+        const el = parent.querySelector(selector)
         const isVisible = ignoreVisibility || el && el.offsetParent !== null
         if (el) {
             return {el, isVisible}
@@ -839,7 +890,7 @@ const SHORTCUTS = {
         action: ({event, document}) => {
             event.preventDefault()
             event.stopPropagation()
-            const selectors = ['#mid1011214 > div.jsSimpleModalContainer > div > div > div.standardModal-toolbar > button']
+            const selectors = ['.jw-refined-hint-close', '#mid1011214 > div.jsSimpleModalContainer > div > div > div.standardModal-toolbar > button']
 
             return !!clickFirstFromList(selectors, document, false)
         }
@@ -1298,15 +1349,15 @@ const displaySeenStatus = () => {
         }
     }
 
-    if ((previouslySeen || time > mediaDuration * .9) && !seenShown) {
+    if ((previouslySeen || time > mediaDuration * .97) && !seenShown) {
         if (!previouslySeen) {
             addToLocalStorage('seen', true)
         }
 
         const result = getFirstElFromList(MEDIA_TITLE_SELECTORS, document)
         if (result) {
-            const { el } = result
-            el.innerHTML += getSeenIndicator()
+            const {el} = result
+            el.append(getSeenIndicator())
             seenShown = true
         }
     }

@@ -239,6 +239,46 @@ textarea {
     height: auto;
 }
 
+.seen {
+    display: inline-block;
+    width: 1rem;
+    height: auto;
+
+    > svg {
+        object-fit: contain;
+    }
+}
+
+.seen-inside-image {
+    speak: none;
+    width: 40px;
+    height: 40px;
+    font-size: 24px;
+    font-style: normal;
+    font-weight: normal;
+    font-variant: normal;
+    text-transform: none;
+    line-height: 1;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    color: #fff;
+    background-color: rgba(0, 0, 0, .6);
+    display: -webkit-box;
+    display: flex;
+    -webkit-box-align: center;
+    align-items: center;
+    -webkit-box-pack: center;
+    justify-content: center;
+    position: absolute;
+    bottom: 0;
+    left: 40px;
+    cursor: pointer;
+
+    &:hover {
+        background-color: #504d7c;
+    }
+}
+
 /* media selector for dark mode */
 @media (prefers-color-scheme: dark) {
     :root {
@@ -454,7 +494,7 @@ to take effect, as the specificity is the same */
         position: fixed;
         top: 0;
         right: 1rem;
-        width: 32px;
+        width: 48px;
         height: 0;
         z-index: 999998;
 
@@ -480,22 +520,21 @@ to take effect, as the specificity is the same */
     .buttonIcon {
         width: 48px;
         display: flex;
+        border-radius: .5rem;
+        overflow: hidden;
         justify-content: center;
 
         @media screen and (min-width: 1201px) {
             display: block;
-            width: 32px;
+            width: 48px;
+            border-radius: 0 0 .5rem .5rem;
+            overflow: hidden;
         }
 
-        > img {
-            width: 32px;
-            border-radius: .5rem;
+        > svg {
+            width: 48px;
             vertical-align: unset !important;
             object-fit: contain;
-
-            @media screen and (min-width: 1201px) {
-                border-radius: 0 0 .5rem .5rem;
-            }
         }
     }
 
@@ -545,7 +584,7 @@ to take effect, as the specificity is the same */
     }
 
     to {
-        height: 32px;
+        height: 48px;
     }
 }
 
