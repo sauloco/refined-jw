@@ -28,6 +28,12 @@ Add comments in the gems or study articles and know immediately how much time wi
 
 ![Refined JW Comments](https://github.com/sauloco/refined-jw/assets/2684443/93b4b30c-922b-410c-b60e-35f1f4154b1c)
 
+
+[NEW] Seen video indicator and resume playback
+
+![seen_indicator_promo](https://github.com/user-attachments/assets/45addbdd-79ae-4d66-9ff1-e984f1288ca8)
+
+
 Select text and search it in a new tab, with just one shortcut.
 
 ![Refined JW Shortcuts](https://github.com/sauloco/refined-jw/assets/2684443/7dabb2c5-6419-4b98-9878-95fbc5d1e862)
