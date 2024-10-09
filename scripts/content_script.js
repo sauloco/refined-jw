@@ -9,6 +9,8 @@ const isJW = !isWOL
 
 let modalObserver = initModalObserver();
 
+const APP_VERSION = chrome.runtime.getManifest().version || '0.0.0';
+
 let dialogBottom = window.visualViewport.height
 let dialogRight = window.visualViewport.width
 
@@ -89,6 +91,7 @@ const usageTracking = async (action, details = {}, forceNewThread = false) => {
         user_id: USER_ID,
         is_recurrent_user: isRecurrentUser,
         location: isWOL ? 'wol' : 'jw',
+        appVersion: APP_VERSION,
         geolocation: navigator.geolocation ? JSON.stringify(navigator.geolocation, null, 2) : null,
         screen: {
             width: screen.width,
