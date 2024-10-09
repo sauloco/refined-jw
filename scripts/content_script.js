@@ -7,6 +7,11 @@
 const isWOL = window.location.href.includes('wol.jw.org')
 const isJW = !isWOL
 
+let modalObserver = initModalObserver();
+
+let dialogBottom = window.visualViewport.height
+let dialogRight = window.visualViewport.width
+
 const JW_AUDIO_RATE_SELECTORS = {
     '2': '#vjs_video_3 > div:nth-child(9) > ul > li:nth-child(1)',
     '1.5': '#vjs_video_3 > div:nth-child(9) > ul > li:nth-child(2)',
@@ -31,7 +36,7 @@ const JW_VIDEO_RATE_SELECTORS = {
     '0.6': '#vjs_video_3 > div:nth-child(11) > ul > li:nth-child(9)'
 }
 
-const MEDIA_TITLE_SELECTORS = ['.mediaItemTitle', 'header > h1']
+const MEDIA_TITLE_SELECTORS = ['.mediaItemTitle', 'header > h1', 'article > div > div > h1']
 
 const SEEN_INDICATOR_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" viewBox="0 0 25 25" fill="none" stroke="#4ab6fe" stroke-width="0.65"><g id="SVGRepo_iconCarrier"> <path d="M5.03033 11.4697C4.73744 11.1768 4.26256 11.1768 3.96967 11.4697C3.67678 11.7626 3.67678 12.2374 3.96967 12.5303L5.03033 11.4697ZM8.5 16L7.96967 16.5303C8.26256 16.8232 8.73744 16.8232 9.03033 16.5303L8.5 16ZM17.0303 8.53033C17.3232 8.23744 17.3232 7.76256 17.0303 7.46967C16.7374 7.17678 16.2626 7.17678 15.9697 7.46967L17.0303 8.53033ZM9.03033 11.4697C8.73744 11.1768 8.26256 11.1768 7.96967 11.4697C7.67678 11.7626 7.67678 12.2374 7.96967 12.5303L9.03033 11.4697ZM12.5 16L11.9697 16.5303C12.2626 16.8232 12.7374 16.8232 13.0303 16.5303L12.5 16ZM21.0303 8.53033C21.3232 8.23744 21.3232 7.76256 21.0303 7.46967C20.7374 7.17678 20.2626 7.17678 19.9697 7.46967L21.0303 8.53033ZM3.96967 12.5303L7.96967 16.5303L9.03033 15.4697L5.03033 11.4697L3.96967 12.5303ZM9.03033 16.5303L17.0303 8.53033L15.9697 7.46967L7.96967 15.4697L9.03033 16.5303ZM7.96967 12.5303L11.9697 16.5303L13.0303 15.4697L9.03033 11.4697L7.96967 12.5303ZM13.0303 16.5303L21.0303 8.53033L19.9697 7.46967L11.9697 15.4697L13.0303 16.5303Z" fill="#4bb6fe"/></g></svg>`
 
@@ -156,15 +161,55 @@ const initJWRefined = () => {
     addHints()
     displayButtonHint()
 
+    if (isWOL) {
+        specificWolInits()
+    }
+
+    if (isJW) {
+        specificJwInits()
+    }
+
 }
 
+const specificWolInits = () => {
+    const tabs = document.querySelectorAll('.tabItem')
+
+    if (tabs.length) {
+        for (const tab of tabs) {
+            tab.addEventListener('click', () => refreshWindowSize())
+        }
+    }
+}
+
+const specificJwInits = () => {
+    dialogBottom = window.visualViewport.height + window.scrollY
+    dialogRight = window.visualViewport.width + window.scrollX
+
+    window.addEventListener('resize', () => {
+        dialogBottom = window.visualViewport.height
+        dialogRight = window.visualViewport.width
+    })
+
+    window.addEventListener('scroll', () => {
+        dialogBottom = window.visualViewport.height + window.scrollY
+        dialogRight = window.visualViewport.width + window.scrollX
+    })
+}
+
+const seenMemo = new Set()
+
 const crawlForSeenLinks = () => {
-    const links = document.querySelectorAll('a:has(> img)') // all links with image inside
+    const links = document.querySelectorAll('a')
 
     for (const link of links) {
         if (!link.href) {
             continue
         }
+
+        if (seenMemo.has(link.href)) {
+            continue
+        }
+
         const url = link.href.startsWith('/')
             ? (isWOL
                     ? 'https://wol.jw.org' + link.href
@@ -173,18 +218,37 @@ const crawlForSeenLinks = () => {
             : link.href
         const seen = getFromLocalStorage('seen', url)
         if (seen) {
-            const overlay = link.querySelector('.syn-img-overlay')
-
-            if (overlay) {
-                overlay.append(getSeenIndicator())
+            const hasImage = !!link.querySelector('img') // all links with image inside
+            let seenEl;
+            if (hasImage) {
+                const overlay = link.querySelector('.syn-img-overlay')
+                seenEl = overlay ? getSeenIndicator() : getSeenIndicatorWithBackground()
+                if (overlay) {
+                    overlay.append(seenEl)
+                } else {
+                    link.append(seenEl)
+                }
             } else {
-                link.append(getSeenIndicatorWithBackground())
+                seenEl = getSeenIndicator()
+                link.append(seenEl)
             }
+            seenEl.setAttribute('title', 'Click to delete current time and seen indicator')
+            seenEl.onclick = (evt) => {
+                evt.preventDefault()
+
+                deleteSeenIndicator(link.href)
+                seenEl.parentElement.removeChild(seenEl)
+                seenMemo.delete(link.href)
+
+                return false
+            }
+
+            seenMemo.add(link.href)
+
         }
     }
 }
 
-// const getSeenIndicator = () => `<span class="badge seen">Seen</span>`
 const getSeenIndicator = () => {
     const span = document.createElement('span')
     span.classList.add('seen')
@@ -794,6 +858,311 @@ function displayPopover(bindToSelector, html) {
     }
 }
 
+function extractJwQuotes(document) {
+
+    if (!modalObserver) {
+        modalObserver = initModalObserver();
+    }
+
+
+    const selection = window.getSelection()
+
+    if (!selection) {
+        return
+    }
+
+    const links = document.querySelectorAll('a.jsHasModalListener')
+
+    for (let i = links.length - 1; i >= 0; i--) {
+        const link = links[i]
+        if (selection.containsNode(link, true)) {
+            link.click()
+        }
+    }
+
+
+}
+
+function initModalObserver() {
+    const observer = new MutationObserver((mutations, observer) => {
+            for (const mutation of mutations) {
+                if (mutation.type === 'childList') {
+                    for (const node of mutation.addedNodes) {
+                        try {
+                            if (
+                                node.nodeType === Node.ELEMENT_NODE
+                                && node.tagName.toLowerCase() !== 'svg'
+                                && node.className
+                            ) {
+                                const classList = node.className.split(/\s+/)
+
+                                if (classList.includes('scriptureDialog')) {
+                                    if (classList.includes('ui-dialog-content')) {
+
+                                        const innerObserver = new MutationObserver((mutations, observer) => {
+                                            for (const mutation of mutations) {
+                                                if (mutation.type === 'attributes') {
+                                                    if (mutation.attributeName === 'style') {
+                                                        console.log('mutation', mutation.attributeName, mutation.oldValue, mutation.target.getAttribute('style'))
+                                                        observer.disconnect()
+                                                        setTimeout(() => rePositionDialog(mutation.target), 100)
+                                                    }
+                                                }
+                                            }
+                                        })
+
+                                        const parent = node.closest('.ui-dialog')
+                                        const closeBtn = parent.querySelector('.ui-dialog-titlebar-close')
+                                        closeBtn.addEventListener('click', (evt) => {
+                                            deletingDialog = true
+                                            positionedMemo.delete(parent)
+                                        })
+                                        innerObserver.observe(parent, {attributes: true})
+                                    }
+                                }
+                            }
+                        } catch
+                            (e) {
+                            console.error('error', e)
+                            console.log(node.nodeType, node.tagName, node.className)
+
+                        }
+                    }
+                }
+            }
+        }
+    )
+
+    observer.observe(document.body, {childList: true, subtree: true})
+
+    return observer
+}
+
+const positionedMemo = new Set()
+let deletingDialog = false
+
+function rePositionDialog(dialog) {
+
+    if (deletingDialog) {
+        if (positionedMemo.has(dialog)) {
+            positionedMemo.delete(dialog)
+        }
+        deletingDialog = false
+        return;
+    }
+    if (positionedMemo.has(dialog)) {
+        return
+    }
+
+    const style = window.getComputedStyle(dialog)
+    const {width, top, left, height} = style
+
+    const {width: vWidth, height: vHeight} = window.visualViewport
+
+
+    let currentLeft = dialogRight - parseInt(width)
+    let newDialogBottom = dialogBottom - parseInt(height)
+
+    if (newDialogBottom > 0) {
+        dialog.style.left = `${currentLeft}px`
+        dialog.style.top = `${newDialogBottom}px`
+        dialogBottom = newDialogBottom
+    } else {
+        dialogRight = currentLeft
+        dialogBottom = document.body.scrollHeight
+        newDialogBottom = dialogBottom - parseInt(height)
+        dialog.style.top = `${newDialogBottom}px`
+        currentLeft = dialogRight - parseInt(width)
+        dialog.style.left = `${currentLeft}px`
+        dialogBottom = newDialogBottom
+    }
+
+
+    positionedMemo.add(dialog)
+}
+
+async function extractWolQuotes(document) {
+
+
+    const subheadings = document.querySelector("#subheadings")
+    const articleParent = document.querySelector('.jw-refined-article-parent')
+
+    const target = subheadings || articleParent
+
+    if (!subheadings) {
+        if (!document.querySelector('.jw-refined-article-left')) {
+            const article = document.querySelector('article')
+
+            if (article) {
+                article.classList.add('jw-refined-article-left')
+                const parent = article.parentElement
+
+                parent.classList.add('jw-refined-article-parent')
+            }
+        }
+    }
+
+    const selection = window.getSelection()
+
+    if (!selection) {
+        return
+    }
+
+    const links = document.querySelectorAll('a[href^="/"]')
+
+    const queryLinks = []
+    for (const link of links) {
+        if (selection.containsNode(link, true)) {
+            queryLinks.push(link)
+        }
+    }
+
+
+    for (const link of queryLinks) {
+        // https://wol.jw.org/wol/bc/r4/lp-s/2024480/1/0
+        // https://wol.jw.org/es/wol/bc/r4/lp-s/2024480/1/0
+        let url = link.getAttribute('href')
+        let urlArray = url.split('/').filter(Boolean)
+        urlArray.shift()
+        url = urlArray.join('/')
+        const result = await fetch('https://wol.jw.org/' + url, {
+            "headers": {
+                "accept": "application/json, text/javascript, */*; q=0.01",
+                "accept-language": "en-US,en;q=0.9,es;q=0.8,es-AR;q=0.7,es-CL;q=0.6,es-CO;q=0.5,es-CR;q=0.4,es-HN;q=0.3,es-MX;q=0.2,es-419;q=0.1,es-PE;q=0.1,es-ES;q=0.1,es-US;q=0.1,es-UY;q=0.1,es-VE;q=0.1",
+                "cache-control": "no-cache",
+                "pragma": "no-cache",
+                "priority": "u=1, i",
+                "sec-ch-ua-mobile": "?0",
+                "sec-fetch-dest": "empty",
+                "sec-fetch-mode": "cors",
+                "sec-fetch-site": "same-origin",
+                "x-requested-with": "XMLHttpRequest",
+                "cookie": "cookieConsent-STRICTLY_NECESSARY=true; cookieConsent-FUNCTIONAL=true; cookieConsent-DIAGNOSTIC=true; cookieConsent-USAGE=true; fontScale=1; binavview=grid; script=ROMAN; dir=ltr; privileged=undefined; rsconf=r4; lib=lp-s; lang=Espa%C3%B1ol; locale=es; ckLang=S; title=Publicaciones%20en%20espa%C3%B1ol%20(1950-2024); audioContinuousPlay=true; ak_bmsc=18002CC79D7E1EB909563D3683C39C2B~000000000000000000000000000000~YAAQkzlAF5y608CRAQAAu/eD9xnWFKInfqxU4d01IiUsr0ucdm/2KXtgWTY0AHXP51E1Y0VA2cnMtrz/VsbPx2lwaSPxuEUE40dSSOhpDbQoDb2xTr5MRrvWeCqHKoeKJhNmAT0BPviN9PWh5pSszuyeJ5s6LeytGTW2OYAfRaDnoMXB6Fe83PxQB9/vdxHPw3yWK3P1UE02OQLaCKBxSyxTp4ORvsOdf9Gk3vXnLi6bYaPcL0z2mUBTACtDXeTpKd1Q5dExlYaYqLJ7Xvau+e7IQF3U35FZg40OTQQrbu46INhVZu/RXIn/+utsxN9Fv83xHSuNr92qA2uPy3s/8ZGcMFmuvgqzQAb1jAHXb3zQtVmsIoMc7JS1YDz3d7/RuTuVhCvWdA==; bm_sv=0F58E4865C6BDF83C15980D84770FF0A~YAAQkzlAF0Ij1MCRAQAAmxuh9xm5tQ1wRupbext+d49gSdVFqB/n9FIocGS0SaGWfC52bUvCqFRssRCB+aOjSQFP7rs4Sv3GsWu9GjGl8hhsYQrLSChCv5bultnOgpJjADFWG25L86hi/iFT2kjSdUYMIsHa9qJRvwHUUI+QOqSuKVd1qXa76dZpsbk3AWMSpbHOvEKrQkXWqAhhddtyemz0j7qEVQRvPDR5kyo+sTpN4uwLyTnLv+k/Zu5z~1",
+                "Referer": window.location.href,
+                "Referrer-Policy": "strict-origin-when-cross-origin"
+            },
+            "body": null,
+            "method": "GET"
+        });
+
+        if (result.status !== 200) {
+            console.error("could not get quote", link)
+            continue
+        }
+
+        const data = await result.json()
+
+        const {pinnedQuote, id} = createPinnedQuote(data)
+
+        target.innerHTML += pinnedQuote
+
+        const closeButtons = document.querySelectorAll('.jw-refined-pinned-quote-close-button')
+
+        for (const closeButton of closeButtons) {
+            closeButton.addEventListener('click', closePinnedQuote)
+        }
+    }
+
+
+    refreshWindowSize()
+
+}
+
+function refreshWindowSize() {
+    window.dispatchEvent(new Event('resize'));
+}
+
+function closePinnedQuote(evt) {
+    evt.target.closest('.jw-refined-pinned-quotes').remove()
+    refreshWindowSize()
+}
+
+function createPinnedQuote(data) {
+    const [item] = data.items
+    const uuid = `quote-${(data.did || item.caption.slugify()) + '-' + Date.now()}`
+    const pinnedQuote = `
+    <div class="jw-refined-pinned-quotes" id="${uuid}"
+     style="overflow: visible;">
+        <div>
+            <div class="pinned-quote dir-ltr" dir="ltr" style="width: auto; height: auto;">
+                <div class="tooltipHeader">
+                    <div class="tooltipType">
+                        ${data.title}
+                    </div>
+                    <div class="tooltipClose">
+                        <div class="jw-refined-pinned-quote-close-button"><span class="icon"></span></div>
+                    </div>
+                </div>
+                <div class="tooltipListContainer">
+                    <ul class="tooltipList">
+                        <li class="tooltipListItem linkCard">
+    
+    
+                            <a href="${item.url}" class="jwac showRuby bibleCitation html5 pub-nwtsty jwac showRuby ml-S ms-ROMAN dir-ltr     chrome
+                                cardContainer
+                                noTooltips
+                             cardLine1Prominent lnk" data-nav-scope-data="[]">
+    
+                                <div class="cardThumbnail ">
+                                    <img class="
+                                cardThumbnailImage
+                                    thumbnail
+                                        ${item.cardImageType}
+    
+                                    icon-default
+                                    publication
+                                    pub-nwtsty
+                                        cat-bi
+    
+                                " data-pub-symbol="nwtsty" src="${item.imageUrl}">
+                                </div>
+    
+                                <div class="cardTitleBlock">
+                                    <div class="    cardLine1
+                                ellipsized
+                                    cardHalfHeight
+                             cardLine1Prominent"><span class="sectionIcon"></span>
+                                        ${item.caption}
+                                    </div>
+                                    <div class="        cardLine2
+                                    ellipsized
+                             cardLine1Prominent">
+                                       ${item.publicationTitle}
+                                    </div>
+                                </div>
+    
+                                <div class="cardTitleDetail"></div>
+    
+                                <div class="cardChevron">
+                                    <div class="icon"></div>
+                                </div>
+    
+                            </a>
+    
+    
+                            <div class="scalableui">
+                                <div class="tooltipContent">
+                                    <div class="${item.articleClasses}">
+                                        <div class="tooltipText">
+                                            ${item.content}
+    
+                                        </div>
+                                    </div>
+                                </div>
+    
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    `
+
+    return {pinnedQuote, id: uuid}
+
+}
+
 function highlightWithColor(document, color) {
 
 
@@ -950,6 +1319,18 @@ const SHORTCUTS = {
             const selectors = ['#navigationDailyTextToday > a',]
 
             return !!clickFirstFromList(selectors, document)
+        }
+    },
+    'P': {
+        keys: ['Shift', 'P'],
+        description: "Pin quotes extracted from current selection",
+        action: async ({document}) => {
+            if (isWOL) {
+                await extractWolQuotes(document)
+            }
+            if (isJW) {
+                await extractJwQuotes(document)
+            }
         }
     },
     'A': {
@@ -1357,7 +1738,13 @@ const displaySeenStatus = () => {
         const result = getFirstElFromList(MEDIA_TITLE_SELECTORS, document)
         if (result) {
             const {el} = result
-            el.append(getSeenIndicator())
+            let seenEl = getSeenIndicator()
+            el.append(seenEl)
+            seenEl.setAttribute('title', 'Click to delete current time and seen indicator')
+            seenEl.onclick = () => {
+                deleteSeenIndicator()
+                seenEl.parentElement.removeChild(seenEl)
+            }
             seenShown = true
         }
     }
@@ -1383,7 +1770,7 @@ const displayPlaybackRate = () => {
         }
         playbackRateElement.innerHTML = `${rate}x`
 
-        window.dispatchEvent(new Event('resize'));
+        refreshWindowSize()
     }
 
     if (videoElement) {
@@ -1399,7 +1786,7 @@ const displayPlaybackRate = () => {
         }
         playbackRateElement.innerHTML = `${rate}x`
 
-        window.dispatchEvent(new Event('resize'));
+        refreshWindowSize()
     }
 }
 
@@ -1635,10 +2022,10 @@ let clearCurrentShortcut = () => {
     localStorage.removeItem(LS_CURRENT_SHORTCUT)
 }
 
-let setVideoCurrentTime = (time) => {
-
+let deleteSeenIndicator = (url) => {
+    addToLocalStorage('current_time', 0, url)
+    addToLocalStorage('seen', false, url)
 }
-
 /*
 *
 * DELAYED INITIALIZATION
@@ -1725,11 +2112,20 @@ const getMarkers = async () => {
 chrome.runtime.onMessage.addListener(
     (request, sender, sendResponse) => {
         if (request.type === 'request_shortcuts') {
-            usageTracking('request_shortcuts')
             sendResponse(SHORTCUTS);
+            usageTracking('request_shortcuts')
         }
         if (request.type === 'url_changed') {
             initJWRefinedDeferred(500)
+        }
+        if (request.type === 'extract_request') {
+            if (isWOL) {
+                extractWolQuotes(window.document)
+            }
+            if (isJW) {
+                extractJwQuotes(window.document)
+            }
+            usageTracking('extract_request')
         }
         return true;
     }

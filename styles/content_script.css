@@ -24,6 +24,9 @@
     --link-color-in-light: #2878bb;
     --link-color-in-dark: #65aade;
 
+    --shadow-color-blue: #279CE0;
+    --shadow-color-orange: #F39949;
+
     --yellow: var(--light-yellow);
     --green: var(--light-green);
     --blue: var(--light-blue);
@@ -243,10 +246,20 @@ textarea {
     display: inline-block;
     width: 1rem;
     height: auto;
+    cursor: pointer;
 
     > svg {
         object-fit: contain;
     }
+}
+
+.jw-refined-article-parent {
+    position: relative;
+}
+
+.jw-refined-article-left {
+    margin: 0 !important;
+    float: left;
 }
 
 .seen-inside-image {
@@ -282,6 +295,10 @@ textarea {
 /* media selector for dark mode */
 @media (prefers-color-scheme: dark) {
     :root {
+
+        --shadow-color-blue: #1A6A99;
+        --shadow-color-orange: #99602e;
+
         --yellow: var(--dark-yellow);
         --green: var(--dark-green);
         --blue: var(--dark-blue);
@@ -488,26 +505,118 @@ to take effect, as the specificity is the same */
     }
 }
 
+.jw-refined-pinned-quotes {
+    .pinned-quote {
+        box-shadow: none !important;
+        margin: 0 !important;
+        margin-bottom: 1rem !important;
+        max-width: 30em;
+        max-height: 100%;
+        min-height: 6em;
+        min-width: 250px;
+        padding: 0;
+        overflow: auto;
+        -webkit-overflow-scrolling: touch;
+        background-color: #fff;
+        color: #333;
+
+        .tooltipHeader {
+            font-size: .9em;
+            font-weight: 500;
+            height: 2.5em;
+            min-height: 40px;
+            background-color: #d8d7d5;
+            top: 0;
+            z-index: 1;
+
+            .tooltipType {
+                float: left;
+                margin-left: 12px;
+                line-height: 2.5em;
+            }
+
+            .jw-refined-pinned-quote-close-button {
+                margin-right: 4px;
+                margin-top: 4px;
+                position: relative;
+                display: block;
+                right: 0;
+                top: 0;
+                cursor: pointer;
+                float: right;
+
+                .icon {
+                    width: 32px;
+                    height: 32px;
+                    display: inline-block;
+                    cursor: pointer;
+                    background: url(https://wol.jw.org/img/wol-sprites-2021.1.png) no-repeat 0 -480px;
+                    background-size: 192px 4080px;
+                }
+
+                &:hover {
+                    .icon {
+                        background-position: -48px -480px;
+                        text-decoration: none;
+                    }
+                }
+            }
+        }
+
+        ul.tooltipList {
+            margin: 0;
+            list-style-type: none;
+            padding-left: 0;
+            padding-right: 0;
+
+            .tooltipContent {
+                padding-left: 12px;
+            }
+        }
+
+    }
+}
+
 .jw-refined-button-hint {
 
+
     @media screen and (min-width: 1201px) {
-        position: fixed;
-        top: 0;
-        right: 1rem;
-        width: 48px;
-        height: 0;
-        z-index: 999998;
 
-        background: none !important;
+        width: 0 !important;
+        height: 0 !important;
 
-        animation: appear-icon;
-        animation-delay: 0s;
-        animation-duration: 0.7s;
-        animation-timing-function: ease-in-out;
-        animation-fill-mode: forwards;
+        &:hover {
+            background-color: unset !important;
+        }
 
-        border: none !important;
-        margin: 0 !important;
+        span {
+            width: 0 !important;
+            height: 0 !important;
+
+            div {
+
+                position: fixed;
+                top: 1rem;
+                right: 1rem;
+                width: 48px;
+                height: 0;
+                z-index: 999998;
+                overflow: hidden;
+
+                background: none;
+
+                animation: appear-icon;
+                animation-delay: 0s;
+                animation-duration: 0.7s;
+                animation-timing-function: ease-in-out;
+                animation-fill-mode: forwards;
+
+                border: none !important;
+                margin: 0 !important;
+                border-radius: .3rem;
+
+            }
+        }
     }
 
     display: flex;
@@ -551,9 +660,23 @@ to take effect, as the specificity is the same */
         display: flex;
         justify-content: center;
 
+        border-radius: .3rem;
+        overflow: hidden;
+
+        > div > svg {
+            position: relative;
+            top: -8px;
+        }
+
         @media screen and (min-width: 1201px) {
             width: 32px;
+
+            > div > svg {
+                position: unset;
+                top: 0;
+            }
         }
+
 
         > img {
             width: 32px;
@@ -578,13 +701,20 @@ to take effect, as the specificity is the same */
 
 }
 
+
 @keyframes appear-icon {
     from {
-        height: 0;
+        opacity: 0;
+
+        box-shadow: 0px 0px 0px var(--shadow-color-blue),
+        0px 0px 0px var(--shadow-color-orange);
     }
 
     to {
-        height: 48px;
+        opacity: 1;
+
+        box-shadow: -20px 20px 60px var(--shadow-color-blue),
+        20px -20px 60px var(--shadow-color-orange);
     }
 }
 
