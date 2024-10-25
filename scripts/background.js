@@ -16,8 +16,6 @@ chrome.contextMenus.onClicked.addListener(onContextMenuClick);
 async function onContextMenuClick(info) {
     const [tab] = await chrome.tabs.query({currentWindow: true, active : true})
 
-    console.log('onContextMenuClick', info)
-
     chrome.tabs.sendMessage(tab.id, {
         type: "extract_request",
         info

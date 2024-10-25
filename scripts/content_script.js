@@ -4,10 +4,18 @@
 *
 * */
 
-const isWOL = window.location.href.includes('wol.jw.org')
-const isJW = !isWOL
+const FEATURE_FLAGS = {
+    useDiscord: true,
+    useGoogleAnalytics: false
+}
 
-let modalObserver = initModalObserver();
+const WOL_BASE_URL = 'https://wol.jw.org'
+const JW_BASE_URL = 'https://www.jw.org'
+
+const isWOL = window.location.href.includes(WOL_BASE_URL)
+const isJW = window.location.href.includes(JW_BASE_URL)
+
+let modalObserver = initModalObserver()
 
 const APP_VERSION = chrome.runtime.getManifest().version || '0.0.0';
 
@@ -113,26 +121,32 @@ const usageTracking = async (action, details = {}, forceNewThread = false) => {
         return
     }
 
+    if (FEATURE_FLAGS.useDiscord) {
 
-    const response = await fetch(
-        `https://discord.com/api/webhooks/1265755905304301611/lwpH8Q1LMiry1Gsj6UYbJuU72FnkwU7Ojo5SZDF6nMAu4aDkP7WBD-wyQUTe5qCgd_29?wait=true${threadId ? `&thread_id=${threadId}` : ''}`,
-        {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                ...(threadId ? {} : {thread_name: `${forceNewThread ? '🔴 Existent user' : '🟢 New user'} ${USER_ID}`}),
-                content: "```json\n" + JSON.stringify(sharedDetails, null, 2) + "\n```"
-            })
+        const response = await fetch(
+            `https://discord.com/api/webhooks/1265755905304301611/lwpH8Q1LMiry1Gsj6UYbJuU72FnkwU7Ojo5SZDF6nMAu4aDkP7WBD-wyQUTe5qCgd_29?wait=true${threadId ? `&thread_id=${threadId}` : ''}`,
+            {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    ...(threadId ? {} : {thread_name: `${forceNewThread ? '🔴 Existent user' : '🟢 New user'} ${USER_ID}`}),
+                    content: "```json\n" + JSON.stringify(sharedDetails, null, 2) + "\n```"
+                })
+            }
+        )
+
+        if (action === 'new_user' || forceNewThread) {
+            const data = await response.json()
+            localStorage.setItem('REFINED-JW-THREAD-ID', data.id)
+        } else if (response.status !== 200) {
+            usageTracking(action, details, true)
         }
-    )
+    }
 
-    if (action === 'new_user' || forceNewThread) {
-        const data = await response.json()
-        localStorage.setItem('REFINED-JW-THREAD-ID', data.id)
-    } else if (response.status !== 200) {
-        usageTracking(action, details, true)
+    if (FEATURE_FLAGS.useGoogleAnalytics) {
+        // TODO: add google analytics
     }
 }
 
@@ -906,7 +920,6 @@ function initModalObserver() {
                                             for (const mutation of mutations) {
                                                 if (mutation.type === 'attributes') {
                                                     if (mutation.attributeName === 'style') {
-                                                        console.log('mutation', mutation.attributeName, mutation.oldValue, mutation.target.getAttribute('style'))
                                                         observer.disconnect()
                                                         setTimeout(() => rePositionDialog(mutation.target), 100)
                                                     }
@@ -927,8 +940,6 @@ function initModalObserver() {
                         } catch
                             (e) {
                             console.error('error', e)
-                            console.log(node.nodeType, node.tagName, node.className)
-
                         }
                     }
                 }
@@ -988,9 +999,7 @@ async function extractWolQuotes(document) {
 
 
     const subheadings = document.querySelector("#subheadings")
-    const articleParent = document.querySelector('.jw-refined-article-parent')
-
-    const target = subheadings || articleParent
+    let articleParent = document.querySelector('.jw-refined-article-parent')
 
     if (!subheadings) {
         if (!document.querySelector('.jw-refined-article-left')) {
@@ -1001,9 +1010,13 @@ async function extractWolQuotes(document) {
                 const parent = article.parentElement
 
                 parent.classList.add('jw-refined-article-parent')
+
+                articleParent = document.querySelector('.jw-refined-article-parent')
             }
         }
     }
+
+    const target = subheadings || articleParent
 
     const selection = window.getSelection()
 
@@ -1059,6 +1072,13 @@ async function extractWolQuotes(document) {
 
         target.innerHTML += pinnedQuote
 
+        const currentPinnedQuote = document.querySelector(`#${id}`)
+        const locale = document.querySelector('#locale').value || ''
+
+        for (const a of currentPinnedQuote.querySelectorAll('a')) {
+            a.href = `${a.href.replace(WOL_BASE_URL, WOL_BASE_URL + `/${locale}`)}`
+        }
+
         const closeButtons = document.querySelectorAll('.jw-refined-pinned-quote-close-button')
 
         for (const closeButton of closeButtons) {
@@ -1099,25 +1119,38 @@ function createPinnedQuote(data) {
                 <div class="tooltipListContainer">
                     <ul class="tooltipList">
                         <li class="tooltipListItem linkCard">
-    
-    
                             <a href="${item.url}" class="jwac showRuby bibleCitation html5 pub-nwtsty jwac showRuby ml-S ms-ROMAN dir-ltr     chrome
                                 cardContainer
                                 noTooltips
                              cardLine1Prominent lnk" data-nav-scope-data="[]">
     
                                 <div class="cardThumbnail ">
-                                    <img class="
-                                cardThumbnailImage
-                                    thumbnail
-                                        ${item.cardImageType}
-    
-                                    icon-default
-                                    publication
-                                    pub-nwtsty
-                                        cat-bi
-    
-                                " data-pub-symbol="nwtsty" src="${item.imageUrl}">
+                                    ${
+                                        !!item.imageUrl 
+                                            ? `<img class="
+                                                cardThumbnailImage
+                                                thumbnail
+                                                ${item.cardImageType}
+                
+                                                icon-default
+                                                publication
+                                                pub-${item.englishSymbol}
+                                                ${item.categories && item.categories.map(c => `cat-${c}`).join(' ')}
+                
+                                                " data-pub-symbol="nwtsty" src="${item.imageUrl}" />`
+                                            : `<span class="
+                                                    cardThumbnailImage
+                                                    thumbnail
+                                                    publication
+                                            
+                                                    icon-default
+                                                    publication
+                                                    
+                                                    pub-${item.englishSymbol}
+                                                    ${item.categories && item.categories.map(c => `cat-${c}`).join(' ')}
+                                            
+                                                " data-pub-symbol="w11"></span>`
+                                    }
                                 </div>
     
                                 <div class="cardTitleBlock">
