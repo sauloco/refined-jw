@@ -9,6 +9,28 @@ const FEATURE_FLAGS = {
     useGoogleAnalytics: false
 }
 
+const DEBUG = false
+
+const debug = (...args) => {
+    return {
+        log: (args) => DEBUG && console.log(...args),
+        warn: (args) => DEBUG && console.warn(...args),
+        error: (args) => DEBUG && console.error(...args)
+    }
+}
+
+const conditionalDebug = (condition, ...args) => {
+    if (DEBUG && condition) {
+        debug.log(...args)
+    }
+}
+
+const conditionalDebugger = (condition) => {
+    if (DEBUG && condition) {
+        debugger
+    }
+}
+
 const WOL_BASE_URL = 'https://wol.jw.org'
 const JW_BASE_URL = 'https://www.jw.org'
 
@@ -23,27 +45,27 @@ let dialogBottom = window.visualViewport.height
 let dialogRight = window.visualViewport.width
 
 const JW_AUDIO_RATE_SELECTORS = {
-    '2': '#vjs_video_3 > div:nth-child(9) > ul > li:nth-child(1)',
-    '1.5': '#vjs_video_3 > div:nth-child(9) > ul > li:nth-child(2)',
-    '1.2': '#vjs_video_3 > div:nth-child(9) > ul > li:nth-child(3)',
-    '1.1': '#vjs_video_3 > div:nth-child(9) > ul > li:nth-child(4)',
-    '1': '#vjs_video_3 > div:nth-child(9) > ul > li:nth-child(5)',
-    '0.9': '#vjs_video_3 > div:nth-child(9) > ul > li:nth-child(6)',
-    '0.8': '#vjs_video_3 > div:nth-child(9) > ul > li:nth-child(7)',
-    '0.7': '#vjs_video_3 > div:nth-child(9) > ul > li:nth-child(8)',
-    '0.6': '#vjs_video_3 > div:nth-child(9) > ul > li:nth-child(9)'
+    '2': 'div.video-js > div:nth-child(9) > ul > li:nth-child(1)',
+    '1.5': 'div.video-js > div:nth-child(9) > ul > li:nth-child(2)',
+    '1.2': 'div.video-js > div:nth-child(9) > ul > li:nth-child(3)',
+    '1.1': 'div.video-js > div:nth-child(9) > ul > li:nth-child(4)',
+    '1': 'div.video-js > div:nth-child(9) > ul > li:nth-child(5)',
+    '0.9': 'div.video-js > div:nth-child(9) > ul > li:nth-child(6)',
+    '0.8': 'div.video-js > div:nth-child(9) > ul > li:nth-child(7)',
+    '0.7': 'div.video-js > div:nth-child(9) > ul > li:nth-child(8)',
+    '0.6': 'div.video-js > div:nth-child(9) > ul > li:nth-child(9)'
 }
 
 const JW_VIDEO_RATE_SELECTORS = {
-    '2': '#vjs_video_3 > div:nth-child(11) > ul > li:nth-child(1)',
-    '1.5': '#vjs_video_3 > div:nth-child(11) > ul > li:nth-child(2)',
-    '1.2': '#vjs_video_3 > div:nth-child(11) > ul > li:nth-child(3)',
-    '1.1': '#vjs_video_3 > div:nth-child(11) > ul > li:nth-child(4)',
-    '1': '#vjs_video_3 > div:nth-child(11) > ul > li:nth-child(5)',
-    '0.9': '#vjs_video_3 > div:nth-child(11) > ul > li:nth-child(6)',
-    '0.8': '#vjs_video_3 > div:nth-child(11) > ul > li:nth-child(7)',
-    '0.7': '#vjs_video_3 > div:nth-child(11) > ul > li:nth-child(8)',
-    '0.6': '#vjs_video_3 > div:nth-child(11) > ul > li:nth-child(9)'
+    '2': 'div.video-js > div:nth-child(11) > ul > li:nth-child(1)',
+    '1.5': 'div.video-js > div:nth-child(11) > ul > li:nth-child(2)',
+    '1.2': 'div.video-js > div:nth-child(11) > ul > li:nth-child(3)',
+    '1.1': 'div.video-js > div:nth-child(11) > ul > li:nth-child(4)',
+    '1': 'div.video-js > div:nth-child(11) > ul > li:nth-child(5)',
+    '0.9': 'div.video-js > div:nth-child(11) > ul > li:nth-child(6)',
+    '0.8': 'div.video-js > div:nth-child(11) > ul > li:nth-child(7)',
+    '0.7': 'div.video-js > div:nth-child(11) > ul > li:nth-child(8)',
+    '0.6': 'div.video-js > div:nth-child(11) > ul > li:nth-child(9)'
 }
 
 const MEDIA_TITLE_SELECTORS = ['.mediaItemTitle', 'header > h1', 'article > div > div > h1']
@@ -90,6 +112,11 @@ const getUserId = () => {
 
 const USER_ID = getUserId()
 const TRACKING_DISABLED = localStorage.getItem('REFINED-JW-TRACKING-DISABLED') === 'true'
+
+let audioElement;
+let audioPlayer;
+
+let videoElement;
 
 const usageTracking = async (action, details = {}, forceNewThread = false) => {
 
@@ -161,6 +188,7 @@ const initJWRefined = () => {
         return
     }
 
+
     initAllInputs();
 
     loadComments();
@@ -177,6 +205,7 @@ const initJWRefined = () => {
 
     addHints()
     displayButtonHint()
+    displayReadingTime()
 
     if (isWOL) {
         specificWolInits()
@@ -205,12 +234,72 @@ const specificJwInits = () => {
     window.addEventListener('resize', () => {
         dialogBottom = window.visualViewport.height
         dialogRight = window.visualViewport.width
+
+        refreshTranscriptionContentSize()
+
     })
 
     window.addEventListener('scroll', () => {
         dialogBottom = window.visualViewport.height + window.scrollY
         dialogRight = window.visualViewport.width + window.scrollX
     })
+
+    const languageChooser = document.querySelector('#otherAvailLangsChooser')
+
+    if (languageChooser) {
+        const languageObserver = new MutationObserver(async (mutations, observer) => {
+
+            for (const mutation of mutations) {
+                if (mutation.type === 'attributes' && mutation.attributeName === 'lang' && mutation.oldValue !== mutation.target.lang && !processingLangChangeMemo.has(mutation.target.lang)) {
+                    processingLangChangeMemo.add(mutation.target.lang)
+                    videoElement = null
+
+                    resetTranscriptions()
+
+                    setTimeout(() => {
+                        waitForVideoAvailable(startSubtitlesHandler)
+                        processingLangChangeMemo.delete(mutation.target.lang)
+                    }, 500)
+
+                }
+            }
+        })
+
+        languageObserver.observe(document, {
+            subtree: true,
+            attributes: true,
+            childList: true
+        })
+
+    }
+}
+
+const processingLangChangeMemo = new Set()
+
+const refreshTranscriptionContentSize = () => {
+    if (hasTranscription) {
+        const transcriptionWrapper = document.querySelector('.jw-refined-transcription')
+
+        if (transcriptionWrapper) {
+            const transcriptionContainer = document.querySelector('.contentArea') || document.querySelector('#sidebar') || document.querySelector('article')
+
+            const transcriptionStyle = {
+                height: 'auto',
+                overflow: 'hidden',
+            }
+
+            isTranscriptionInSidebar = transcriptionContainer === document.querySelector('#sidebar') && window.visualViewport.width >= 960
+
+            if (isTranscriptionInSidebar) {
+
+                transcriptionStyle.height = `${window.visualViewport.height - (transcriptionContainer.getBoundingClientRect().top + window.scrollX)}px`
+            }
+
+            transcriptionWrapper.style.height = transcriptionStyle.height
+            transcriptionWrapper.style.overflow = transcriptionStyle.overflow
+        }
+    }
+
 }
 
 const seenMemo = new Set()
@@ -283,6 +372,50 @@ const getSeenIndicatorWithBackground = () => {
     return div
 }
 
+const displayReadingTime = () => {
+    const existsReadingTimeEl = !!document.querySelector('.jw-refined-reading-time')
+    if (existsReadingTimeEl) {
+        return;
+    }
+
+
+    const {el: readingArticle} = getFirstElFromList(['article.layout-reading', 'article.article.document#article', '.tabContent.active'])
+
+    if (!readingArticle) {
+        return
+    }
+
+    const articleHeader = isJW
+        ? readingArticle.querySelector('header')
+        : getFirstElFromList(['.st', 'header']).el
+
+    const readingTimeEL = document.createElement('p')
+
+    readingTimeEL.classList.add('jw-refined-reading-time')
+
+    const {textContent} = isJW
+        ? readingArticle.querySelector('.contentBody')
+        : readingArticle
+    const seconds = calculateSpeechTime(textContent, 225)
+
+    const minutes = Math.round(seconds / 60)
+
+    readingTimeEL.innerHTML = `Reading time ${minutes < 1 ? 'less than 1 minute.' : `${minutes} min.`}`
+
+    articleHeader.appendChild(readingTimeEL)
+}
+
+const openHintFrame = (holdingShift) => {
+    HINT_FRAME.classList.add('open')
+    usageTracking(holdingShift ? 'open_hint_shift' : 'open_hint')
+}
+
+const closeHintFrame = (releaseShift) => {
+    HINT_FRAME.classList.remove('open')
+    usageTracking(releaseShift ? 'close_hint_shift' : 'close_hint')
+
+}
+
 const displayButtonHint = () => {
 
     if (document.querySelector('#jw-refined-button-hint')) {
@@ -306,8 +439,7 @@ const displayButtonHint = () => {
         document.querySelector('#menuBar').insertBefore(button, document.querySelector('#menuBible'))
 
         button.addEventListener('click', () => {
-            HINT_FRAME.classList.add('open')
-            usageTracking('open_hint')
+            openHintFrame()
         })
     }
 
@@ -330,8 +462,8 @@ const displayButtonHint = () => {
         document.querySelector('.siteFeaturesContainer').insertBefore(button, document.querySelector('#siteHeader > div.siteFeaturesContainer > a.tertiaryButton.siteFeaturesItem.jsChooseSiteLanguage'))
 
         button.addEventListener('click', () => {
-            HINT_FRAME.classList.add('open')
-            usageTracking('open_hint')
+            openHintFrame()
+
         })
 
         const button_mobile = document.createElement('div')
@@ -350,8 +482,7 @@ const displayButtonHint = () => {
         document.querySelector('.navBarControls').insertBefore(button_mobile, document.querySelector('#mobileLangOpen'))
 
         button_mobile.addEventListener('click', () => {
-            HINT_FRAME.classList.add('open')
-            usageTracking('open_hint')
+            openHintFrame()
         })
     }
 }
@@ -395,8 +526,7 @@ const addHints = () => {
     `
 
     close.addEventListener('click', () => {
-        HINT_FRAME.classList.remove('open')
-        usageTracking('close_hint')
+        closeHintFrame()
     })
 
     HINT_FRAME = frame
@@ -404,9 +534,29 @@ const addHints = () => {
 
 let subtitlesRetries = 0
 
+let hasTranscription = false
+let isTranscriptionInSidebar = false
+let processingTranscription = false
 const startSubtitlesHandler = async () => {
+
+    if (processingTranscription) {
+        console.info('Already processing subtitles')
+        return
+    }
+
+    processingTranscription = true
+
+    const transcriptionsLoaded = document.querySelector('.jw-refined-transcription')
+
+    if (!!transcriptionsLoaded) {
+        processingTranscription = false
+        return
+    }
+
     const video = document.querySelector('video')
     if (isJW && video) {
+        resetTranscriptions()
+
         const pageConfig = document.querySelector('#pageConfig')
         const pubShareLink = document.querySelector('.shareButtonWrapper .link')
 
@@ -452,7 +602,13 @@ const startSubtitlesHandler = async () => {
                 const {duration, subtitles: {url: subsUrl}} = firstFileWithSubtitles
                 mediaDuration = duration
                 displaySeenStatus()
-                subtitlesUrl = subsUrl
+
+                if (!subsUrl) {
+                    console.info('no subtitles found')
+                } else {
+                    subtitlesUrl = subsUrl
+                }
+
             } else {
                 const {files} = jsonResponse
                 const urlParams = new URLSearchParams(new URL(url).search);
@@ -469,63 +625,140 @@ const startSubtitlesHandler = async () => {
                             found = true
                             break
                         }
-                        if (found) {
-                            break
-                        }
                     }
+                    if (found) {
+                        break
+                    }
+                }
+
+                if (!found) {
+                    console.info('no subtitles found')
                 }
 
             }
 
 
-            const vttResponse = await fetch(subtitlesUrl)
+            let text = "";
+            let vtt;
+            if (subtitlesUrl) {
 
-            if (vttResponse) {
-                const vtt = await vttResponse.text()
 
-                const parser = new WebVTT.Parser(window, WebVTT.StringDecoder())
+                const vttResponse = await fetch(subtitlesUrl)
 
-                const cues = []
+                if (vttResponse) {
+                    vtt = await vttResponse.text()
 
-                parser.oncue = function (cue) {
-                    cues.push(cue);
-                };
+                    const parser = new WebVTT.Parser(window, WebVTT.StringDecoder())
 
-                parser.parse(vtt);
-                parser.flush();
+                    const cues = []
 
-                let text = "";
+                    parser.oncue = function (cue) {
+                        cues.push(cue);
+                    };
 
-                const lines = cues.map(cue => cue.text).join('\n').split('\n')
-                for (const i in lines) {
-                    const prevLine = lines[+i - 1]
-                    const line = lines[i]
-                    const nextLine = lines[+i + 1] || ''
+                    parser.parse(vtt);
+                    parser.flush();
 
-                    text += `${line.startsWith(`‘`) && prevLine.startsWith(`‘`) ? line.substring(1) : line}${isNewLineRequired(line, nextLine) ? '\n' : ' '}`
+
+                    let wasOpenSentence = false
+                    let wasOpenQuote = {status: false, double: 0}
+
+                    const [openQuotationMark, closingQuotationMark] = autoDetectQuotes(cues.map(cue => cue.text))
+
+                    for (const i in cues) {
+                        const cue = cues[i]
+                        const lines = cue.text.split('\n')
+
+
+                        for (const line of lines) {
+
+                            const doubleOpenQuotes = countChars(openQuotationMark, line)
+                            const reOpenedDoubleQuote = wasOpenQuote.status && wasOpenQuote.double > 0 && doubleOpenQuotes > 0
+
+                            const doubleCloseQuotes = countChars(closingQuotationMark, line)
+
+                            const isClosedDoubleQuote = (reOpenedDoubleQuote ? 0 : doubleOpenQuotes) - doubleCloseQuotes === 0
+
+                            const isOpenQuote = (reOpenedDoubleQuote ? 0 : doubleOpenQuotes) > 0
+
+                            const isSelfClosedQuote = !wasOpenQuote.status && (!isOpenQuote || isClosedDoubleQuote)
+
+                            const isEndingQuote = isSelfClosedQuote || (wasOpenQuote.status && wasOpenQuote.double - doubleCloseQuotes === 0)
+
+                            const isEndingSentence = (line.endsWith(".") || line[line.length - 2] === "." || (line.endsWith('</i>') && line[line.length - 5] === "."))
+
+
+                            let currentLine = ''
+                            if (wasOpenSentence) {
+                                currentLine += " "
+                            } else {
+                                currentLine += `<p class="jw-refined-transcription-sentence-clickable" data-start="${cue.startTime}" data-end="${isEndingSentence ? cue.endTime : 'TBD'}">`
+
+                            }
+
+                            currentLine += reOpenedDoubleQuote
+                                ? line.replace(openQuotationMark, "")
+                                : line
+
+                            if (isEndingQuote) {
+                                wasOpenQuote.status = false
+                                wasOpenQuote.double = 0
+                                wasOpenSentence = false
+                            }
+
+                            if (isEndingSentence && isEndingQuote) {
+                                text = text.replace('data-end="TBD"', `data-end="${cue.endTime}"`)
+                                currentLine += `</p>`
+
+                            } else {
+                                if (isOpenQuote && !isEndingQuote) {
+                                    wasOpenQuote.status = true
+                                    wasOpenQuote.double = (reOpenedDoubleQuote ? 0 : doubleOpenQuotes)
+                                }
+                                wasOpenSentence = true
+                            }
+
+                            text += currentLine
+                        }
+
+
+                    }
                 }
+                hasTranscription = true
+            } else {
+                hasTranscription = false
+            }
 
-                const title = document.querySelector('#article h1')
+            text = text.replaceAll("- -", "")
 
-                text = `<strong>${title.textContent}</strong>
-                    
+
+            const title = document.querySelector('#article h1')
+
+            text = `<strong>${title.textContent}</strong>
+                    <div class="jw-refined-info-box" style="display: ${hasTranscription ? 'block' : 'none'}"><span class="badge new">New</span> Click on any sentence to jump the video</div>
 ${text}
                     
-<a class="jw-refined-transcription-link" href="${window.location.href}">${window.location.href}</a>
+<a class="jw-refined-transcription-link" href="${window.location.href}" style="display: ${hasTranscription ? 'inline' : 'none'}">${window.location.href}</a>
 `
 
-                const transcriptionContainer = document.querySelector('.contentArea') || document.querySelector('#sidebar')
 
-                transcriptionContainer.innerHTML += `
+            const transcriptionContainer = document.querySelector('.contentArea') || document.querySelector('#sidebar') || document.querySelector('article')
+
+            transcriptionContainer.innerHTML += `
 <div id="jw-refined-transcription" class="jw-refined-transcription">
     <span id="jw-refined-transcription-title"  class="jw-refined-transcription-title"><h2 id="anchor_1">Transcription</h2><span class="badge promo">JW Refined</span></span>
     <div id="jw-refined-transcription-text" class="jw-refined-transcription-text">
-        ${text.replace(/\n/g, '<br/>') || 'No transcription available'}
+        ${hasTranscription ? text : 'No transcription available'}
     </div>
-    <button id="download-vtt" class="secondaryButton link">
+    <button id="download-vtt" class="secondaryButton link" style="display: ${hasTranscription ? 'block' : 'none'}">
         <span class="buttonText">Download as subtitles</span>
     </button>
 </div>`
+
+            refreshTranscriptionContentSize()
+
+
+            if (hasTranscription) {
 
                 const intersectorOptions = {
                     root: null,
@@ -545,21 +778,71 @@ ${text}
 
                 const downloadButton = document.querySelector('#download-vtt')
 
+
                 downloadButton.addEventListener('click', () => {
                     download(vtt, `${title.textContent}_subtitles.vtt`, 'text/vtt')
                     usageTracking('download_subtitles')
                 })
+
+                const sentences = document.querySelectorAll('.jw-refined-transcription-sentence-clickable')
+
+                for (const sentence of sentences) {
+                    sentence.addEventListener('click', (ev) => {
+                        const isHighlighted = ev.target.classList.contains('highlighted');
+                        if (isHighlighted) {
+                            if (!videoElement) {
+                                return
+                            }
+
+                            toggleVideoPlaybackStatus()
+                        } else {
+
+                            jumpToTime(sentence.dataset.start)
+                        }
+                        usageTracking('jump_to_time')
+                    })
+                }
+
+                videoElement.addEventListener('timeupdate', updateTranscriptionStatus)
             }
+
+
         }
     }
+
+    processingTranscription = false
 }
 
-const isNewLineRequired = (line, nextLine) => {
-    if (line.endsWith('.') || line.endsWith('!') || line.endsWith('?') || line.endsWith('."') || line.endsWith(`.'`)) {
-        return !(nextLine.startsWith(`‘`) || nextLine.endsWith(`’`));
+const STANDARD_QUOTATION_MARK_PER_LANGUAGE = {
+    'en': ['“', '”'],
+    'fr': ['«', '»'],
+    'de': ['„', '“'],
+}
+
+const autoDetectQuotes = (lines) => {
+    const text = lines.join('\n')
+
+    for (const lang in STANDARD_QUOTATION_MARK_PER_LANGUAGE) {
+        const [open, close] = STANDARD_QUOTATION_MARK_PER_LANGUAGE[lang]
+
+        if (text.includes(open) && text.includes(close)) {
+            console.log('found quotes for', lang)
+            return [open, close]
+        }
+    }
+    console.info('default quotes')
+    return STANDARD_QUOTATION_MARK_PER_LANGUAGE['en']
+}
+
+const countChars = (char, line) => line.split("").filter(c => c === char).length || 0
+
+const jumpToTime = (time) => {
+    const video = videoElement;
+    if (video) {
+        video.currentTime = time;
+        toggleVideoPlaybackStatus('play')
 
     }
-    return false
 }
 
 const initAllInputs = () => {
@@ -610,6 +893,9 @@ const loadSelections = () => {
 
 const startShortcuts = () => {
     document.addEventListener("keydown", handleShortcut);
+    document.addEventListener("keydown", onKeyDown);
+    document.addEventListener("keyup", onKeyUp);
+
     clearCurrentShortcut();
 }
 
@@ -623,12 +909,9 @@ const setSearchFocusStatus = () => {
     }
 }
 
-const calculateSpeechTime = (value) => {
-
-    const words = value.split(' ');
-
-    // 140 average words per minute
-    return Math.ceil(words.length / 140 * 60)
+const calculateSpeechTime = (text, wpm = 140) => {
+    const words = text.split(' ');
+    return Math.ceil(words.length / wpm * 60)
 }
 
 /*
@@ -791,6 +1074,32 @@ const onInputKeyDown = (e) => {
     }
 }
 
+let shiftDownTimeout;
+
+const onKeyDown = (e) => {
+    if (e.key === 'Shift') {
+
+        renderShortcuts(SHORTCUTS, true)
+
+        shiftDownTimeout = setTimeout(() => {
+            openHintFrame(true)
+        }, 1000)
+    } else {
+        clearShiftDownTimeout()
+    }
+}
+
+const clearShiftDownTimeout = () => {
+    if (shiftDownTimeout) {
+        clearTimeout(shiftDownTimeout)
+        closeHintFrame(true)
+    }
+}
+
+const onKeyUp = (e) => {
+    clearShiftDownTimeout()
+}
+
 const handleShortcut = (event) => {
 
     if (document.activeElement && ['TEXTAREA', 'INPUT'].includes(document.activeElement.tagName) || getCurrentShortcut()) {
@@ -800,6 +1109,7 @@ const handleShortcut = (event) => {
     const shortcut = SHORTCUTS[event.key]
 
     if (shortcut) {
+        clearShiftDownTimeout()
         setCurrentShortcut(event.key)
         event.preventDefault()
         event.stopPropagation()
@@ -1126,8 +1436,8 @@ function createPinnedQuote(data) {
     
                                 <div class="cardThumbnail ">
                                     ${
-                                        !!item.imageUrl 
-                                            ? `<img class="
+        !!item.imageUrl
+            ? `<img class="
                                                 cardThumbnailImage
                                                 thumbnail
                                                 ${item.cardImageType}
@@ -1138,7 +1448,7 @@ function createPinnedQuote(data) {
                                                 ${item.categories && item.categories.map(c => `cat-${c}`).join(' ')}
                 
                                                 " data-pub-symbol="nwtsty" src="${item.imageUrl}" />`
-                                            : `<span class="
+            : `<span class="
                                                     cardThumbnailImage
                                                     thumbnail
                                                     publication
@@ -1150,7 +1460,7 @@ function createPinnedQuote(data) {
                                                     ${item.categories && item.categories.map(c => `cat-${c}`).join(' ')}
                                             
                                                 " data-pub-symbol="w11"></span>`
-                                    }
+    }
                                 </div>
     
                                 <div class="cardTitleBlock">
@@ -1288,21 +1598,59 @@ function getPlaybackRate(lsKey = LS_USER_PREF_AUDIO_PLAYBACK_RATE) {
     return Number(localStorage.getItem(lsKey)) || 1;
 }
 
+const getSearchField = () => {
+
+    let searchField = document.querySelector('#standardSearch > form > div.searchFieldContainer > input.searchField')
+
+    if (!searchField) {
+        searchField = document.querySelector('#siteHeader > div.siteFeaturesContainer > div > form > input')
+    }
+
+    return searchField
+}
+
+const ESCAPE_SELECTORS = ['.jw-refined-hint-close', '#mid1011214 > div.jsSimpleModalContainer > div > div > div.standardModal-toolbar > button']
+const BIBLE_SELECTORS = ['#menuBible > a']
+const PUBLICATIONS_SELECTORS = ['#menuPublications > a']
+const MEETINGS_SELECTORS = ['#menuToday > a']
+const TODAY_SELECTORS = ['#navigationDailyTextToday > a']
+const HOME_SELECTORS = ['#menuHome > a', '#siteLogo']
+const SHARE_SELECTORS = ['#shareButtonFooter', '.jsShare',]//'#article > div > div > div > div.jsShareButtonContainer.shareButtonWrapper > button', '#article > div.articleFooterLinks > div.articleShareLinks > div > button']
+const LANGUAGES_SELECTORS = ['#libraryTitle > a', '#siteHeader > div.siteFeaturesContainer > a.tertiaryButton.siteFeaturesItem.jsChooseSiteLanguage']
+const PREV_NAVIGATION_SELECTORS = ['#publicationNavigation > div.chrome.forwardBackNavControls.resultNavControls > ul > li.resultNavLeft > a',
+    '#sidebarTOC > nav > div.articleNavLinks > div.navLinkPrev > a',
+    '#footerPrevWeek > a',
+    '#footerPrevDay > a',
+    '#article > div.pagination.cms-clearfix > div.links > a.iconNext.dir-ltr.secondaryButton',
+    '#article > div:nth-child(4) > div.links > a.iconPrev.dir-ltr.secondaryButton',
+    '#article > div.articleFooterLinks.cms-clearfix > nav > div > div:nth-child(1) > a'
+]
+const NEXT_NAVIGATION_SELECTORS = [
+    '#publicationNavigation > div.chrome.forwardBackNavControls.resultNavControls > ul > li.resultNavRight > a', // next song
+    '#sidebarTOC > nav > div.articleNavLinks > div.navLinkNext > a', // next article
+    '#footerNextWeek > a', // next week
+    '#footerNextDay > a', // next day
+    '#article > div:nth-child(4) > div.links > a.iconNext.dir-ltr.secondaryButton', // next search result
+    '#article > div.articleFooterLinks.cms-clearfix > nav > div > div:nth-child(3) > a', // next chapter JW
+]
+const SETTINGS_SELECTORS = ['#menuToolsPreferences > a']
+
 const SHORTCUTS = {
     'Escape': {
         keys: ['Esc'],
         description: "Close the popup",
+        condition: () => !!getFirstElFromList(ESCAPE_SELECTORS),
         action: ({event, document}) => {
             event.preventDefault()
             event.stopPropagation()
-            const selectors = ['.jw-refined-hint-close', '#mid1011214 > div.jsSimpleModalContainer > div > div > div.standardModal-toolbar > button']
 
-            return !!clickFirstFromList(selectors, document, false)
+            return !!clickFirstFromList(ESCAPE_SELECTORS, document, false)
         }
     },
     'Q': {
         keys: ['Shift', 'Q'],
         description: "Go to search or query the selected text",
+        condition: () => !!getSearchField(),
         action: ({event, document}) => {
             const searchField = getSearchField()
             if (searchField) {
@@ -1327,39 +1675,32 @@ const SHORTCUTS = {
     'W': {
         keys: ['Shift', 'W'],
         description: "Go to Bible or Bible Teachings",
-        action: ({document}) => {
-            const selectors = ['#menuBible > a']
-            return !!clickFirstFromList(selectors, document)
-        }
+        condition: () =>!!getFirstElFromList(BIBLE_SELECTORS),
+        action: ({document}) => !!clickFirstFromList(BIBLE_SELECTORS, document)
     },
     'E': {
         keys: ['Shift', 'E'],
         description: "Go to Publications",
-        action: ({document}) => {
-            const selectors = ['#menuPublications > a']
-            return !!clickFirstFromList(selectors, document)
-        }
+        condition: () => !!getFirstElFromList(PUBLICATIONS_SELECTORS),
+        action: ({document}) => !!clickFirstFromList(PUBLICATIONS_SELECTORS, document)
     },
     'R': {
         keys: ['Shift', 'R'],
         description: "Go to Meetings",
-        action: ({document}) => {
-            const selectors = ['#menuToday > a']
-            return !!clickFirstFromList(selectors, document)
-        }
+        condition: () => !!getFirstElFromList(MEETINGS_SELECTORS),
+        action: ({document}) => !!clickFirstFromList(MEETINGS_SELECTORS, document)
     },
     'T': {
         keys: ['Shift', 'T'],
         description: "Navigate to current day or week",
-        action: ({document}) => {
-            const selectors = ['#navigationDailyTextToday > a',]
+        condition: () => !!getFirstElFromList(TODAY_SELECTORS),
+        action: ({document}) => !!clickFirstFromList(TODAY_SELECTORS, document)
 
-            return !!clickFirstFromList(selectors, document)
-        }
     },
     'P': {
         keys: ['Shift', 'P'],
         description: "Pin quotes extracted from current selection",
+        condition: () => isWOL || isJW,
         action: async ({document}) => {
             if (isWOL) {
                 await extractWolQuotes(document)
@@ -1372,18 +1713,16 @@ const SHORTCUTS = {
     'A': {
         keys: ['Shift', 'A'],
         description: "Go to Home",
-        action: ({document}) => {
-            const selectors = ['#menuHome > a', '#siteLogo']
-            return !!clickFirstFromList(selectors, document)
-        }
+        condition: () => !!getFirstElFromList(HOME_SELECTORS),
+        action: ({document}) => !!clickFirstFromList(HOME_SELECTORS, document)
     },
     'S': {
         keys: ['Shift', 'S'],
         description: "Share",
+        condition: () => !!getFirstElFromList(SHARE_SELECTORS),
         action: ({document}) => {
-            const selectors = ['#shareButtonFooter', '.jsShare',]//'#article > div > div > div > div.jsShareButtonContainer.shareButtonWrapper > button', '#article > div.articleFooterLinks > div.articleShareLinks > div > button']
 
-            clickFirstFromList(selectors, document)
+            clickFirstFromList(SHARE_SELECTORS, document)
 
             setTimeout(() => {
 
@@ -1399,24 +1738,24 @@ const SHORTCUTS = {
     'F': {
         keys: ['Shift', 'F'],
         description: "Toggle fullscreen",
+        condition: () => !!videoElement,
         action: ({document}) => {
-            const selectors = ['#vjs_video_3 button.vjs-fullscreen-control']
+            const selectors = ['div.video-js button.vjs-fullscreen-control']
             return !!clickFirstFromList(selectors, document)
         }
     },
     'L': {
         keys: ['Shift', 'L'],
         description: "Go to Languages",
-        action: ({document}) => {
-            const selectors = ['#libraryTitle > a', '#siteHeader > div.siteFeaturesContainer > a.tertiaryButton.siteFeaturesItem.jsChooseSiteLanguage']
-            return !!clickFirstFromList(selectors, document)
-        }
+        condition: () => !!getFirstElFromList(LANGUAGES_SELECTORS),
+        action: ({document}) => !!clickFirstFromList(LANGUAGES_SELECTORS, document)
     },
     'C': {
         keys: ['Shift', 'C'],
         description: "Toggle captions",
+        condition: () => !!videoElement,
         action: ({document}) => {
-            const selectors = ['#vjs_video_3 > div:nth-child(10) > ul > li.vjs-menu-item.vjs-menu-item-radio:not(.vjs-selected)']
+            const selectors = ['div.video-js > div:nth-child(10) > ul > li.vjs-menu-item.vjs-menu-item-radio:not(.vjs-selected)']
 
             return !!clickFirstFromList(selectors, document)
         }
@@ -1424,34 +1763,14 @@ const SHORTCUTS = {
     'B': {
         keys: ['Shift', 'B'],
         description: "Navigate to previous article, week or day",
-        action: ({document}) => {
-            const selectors = ['#publicationNavigation > div.chrome.forwardBackNavControls.resultNavControls > ul > li.resultNavLeft > a',
-                '#sidebarTOC > nav > div.articleNavLinks > div.navLinkPrev > a',
-                '#footerPrevWeek > a',
-                '#footerPrevDay > a',
-                '#article > div.pagination.cms-clearfix > div.links > a.iconNext.dir-ltr.secondaryButton',
-                '#article > div:nth-child(4) > div.links > a.iconPrev.dir-ltr.secondaryButton',
-                '#article > div.articleFooterLinks.cms-clearfix > nav > div > div:nth-child(1) > a'
-            ]
-
-            return !!clickFirstFromList(selectors, document);
-        }
+        condition: () => !!getFirstElFromList(PREV_NAVIGATION_SELECTORS),
+        action: ({document}) => !!clickFirstFromList(PREV_NAVIGATION_SELECTORS, document)
     },
     'N': {
         keys: ['Shift', 'N'],
         description: "Navigate to next article, week or day",
-        action: ({document}) => {
-
-            const selectors = [
-                '#publicationNavigation > div.chrome.forwardBackNavControls.resultNavControls > ul > li.resultNavRight > a', // next song
-                '#sidebarTOC > nav > div.articleNavLinks > div.navLinkNext > a', // next article
-                '#footerNextWeek > a', // next week
-                '#footerNextDay > a', // next day
-                '#article > div:nth-child(4) > div.links > a.iconNext.dir-ltr.secondaryButton', // next search result
-                '#article > div.articleFooterLinks.cms-clearfix > nav > div > div:nth-child(3) > a', // next chapter JW
-            ]
-            return !!clickFirstFromList(selectors, document);
-        }
+        condition: () => !!getFirstElFromList(NEXT_NAVIGATION_SELECTORS),
+        action: ({document}) => !!clickFirstFromList(NEXT_NAVIGATION_SELECTORS, document)
     },
     '1': {
         keys: ['1'],
@@ -1528,25 +1847,23 @@ const SHORTCUTS = {
     ',': {
         keys: [','],
         description: "Go to Settings",
+        condition: () => !!getFirstElFromList(SETTINGS_SELECTORS),
         action: ({document}) => {
-            const selectors = ['#menuToolsPreferences > a']
-            return !!clickFirstFromList(selectors, document)
+            if (!isWOL) {
+                return;
+            }
+
+            return !!clickFirstFromList(SETTINGS_SELECTORS, document)
         }
     },
     ' ': {
         keys: [' '],
         description: "Current audio or video play/pause",
+        condition: () => !!videoElement || !!audioElement,
         action: ({event}) => {
             event.preventDefault()
             event.stopPropagation()
-            const maybeJWVideoPlayButtonElement = document.querySelector('#vjs_video_3 > button')
-            let maybeJWVideoPlayButtonElementVisible = false
-            if (maybeJWVideoPlayButtonElement) {
-                const playButtonStyle = window.getComputedStyle(maybeJWVideoPlayButtonElement) || {}
-                if (playButtonStyle.display !== 'none') {
-                    maybeJWVideoPlayButtonElementVisible = true
-                }
-            }
+
 
             if (audioElement && !!audioElement.src) {
                 const rate = getPlaybackRate()
@@ -1558,23 +1875,13 @@ const SHORTCUTS = {
                 }
             }
 
-            if (isJW && maybeJWVideoPlayButtonElementVisible) {
-                maybeJWVideoPlayButtonElement.click()
-            } else if (videoElement && !!videoElement.src) {
-                const rate = getPlaybackRate()
-                setPlaybackRate(rate)
-                if (videoElement.paused) {
-                    videoElement.play()
-                } else {
-                    videoElement.pause()
-                }
-
-            }
+            toggleVideoPlaybackStatus()
         }
     },
     '>': {
         keys: ['>'],
         description: "Increase playback speed of current audio or video",
+        condition: () => !!videoElement || !!audioElement,
         action: ({event}) => {
             event.preventDefault()
             event.stopPropagation()
@@ -1592,6 +1899,7 @@ const SHORTCUTS = {
     '<': {
         keys: ['<'],
         description: "Decrease playback speed of current audio or video",
+        condition: () => !!videoElement || !!audioElement,
         action: ({event}) => {
             event.preventDefault()
             event.stopPropagation()
@@ -1610,6 +1918,7 @@ const SHORTCUTS = {
     'ArrowRight': {
         keys: ['→'],
         description: "Jump audio to next verse, paragraph or section. If not possible then skip forward by 5 seconds",
+        condition: () => !!videoElement || !!audioElement,
         action: ({event}) => {
             event.preventDefault()
             event.stopPropagation()
@@ -1637,6 +1946,7 @@ const SHORTCUTS = {
     'ArrowLeft': {
         keys: ['←'],
         description: "Jump audio to previous verse, paragraph or section. If not possible then skip backward by 5 seconds",
+        condition: () => !!videoElement || !!audioElement,
         action: ({event}) => {
             event.preventDefault()
             event.stopPropagation()
@@ -1662,6 +1972,79 @@ const SHORTCUTS = {
             }
 
         }
+    },
+    '+': {
+        keys: ['+'],
+        description: "Increase font size",
+        condition: () => isWOL,
+        action: ({event}) => {
+
+            if (!isWOL) {
+                return;
+            }
+
+            event.preventDefault()
+            event.stopPropagation()
+
+            const increaseFontSizeEl = document.querySelector('#fontSizeLarger')
+
+            if (increaseFontSizeEl) {
+                increaseFontSizeEl.click()
+            }
+        }
+    },
+    '-': {
+        keys: ['-'],
+        description: "Decrease font size",
+        condition: () => isWOL,
+        action: ({event}) => {
+
+            if (!isWOL) {
+                return;
+            }
+
+            event.preventDefault()
+            event.stopPropagation()
+
+            const decreaseFontSizeEl = document.querySelector('#fontSizeSmaller')
+
+            if (decreaseFontSizeEl) {
+                decreaseFontSizeEl.click()
+            }
+        }
+    }
+}
+
+const toggleVideoPlaybackStatus = (forceState) => {
+
+    const maybeJWVideoPlayButtonElement = document.querySelector('div.video-js > button')
+    let maybeJWVideoPlayButtonElementVisible = false
+    if (maybeJWVideoPlayButtonElement) {
+        const playButtonStyle = window.getComputedStyle(maybeJWVideoPlayButtonElement) || {}
+        if (playButtonStyle.display !== 'none') {
+            maybeJWVideoPlayButtonElementVisible = true
+        }
+    }
+
+    if (isJW && maybeJWVideoPlayButtonElementVisible) {
+        maybeJWVideoPlayButtonElement.click()
+    } else if (videoElement && !!videoElement.src) {
+        const rate = getPlaybackRate()
+        setPlaybackRate(rate)
+
+        if (forceState) {
+            if (forceState === 'play') {
+                videoElement.play()
+            } else if (forceState === 'pause') {
+                videoElement.pause()
+            } else {
+                console.error('Unknown playback status', forceState)
+            }
+        } else if (videoElement.paused) {
+            videoElement.play()
+        } else {
+            videoElement.pause()
+        }
     }
 }
 
@@ -1672,13 +2055,6 @@ const timeNotationToSeconds = (timeNotation) => {
     return Number(hours) * 3600 + Number(minutes) * 60 + Number(seconds) + Number(milliseconds) / 1000
 }
 
-
-let audioElement;
-let audioPlayer;
-
-
-let videoElement;
-
 const getAvailablePlaybackRates = () =>
     isWOL
         ? [0.6, 0.7, 0.8, 0.9, 1, 1.1, 1.2, 1.5, 2, 3, 4, 5]
@@ -1688,7 +2064,7 @@ const waitForAudioAvailable = () => {
     clearAudioSearchInterval = setInterval(async () => {
         const audio = document.querySelector('audio')
         const wolAudioPlayer = document.querySelector('#mep_0')
-        const jwAudioPlayer = document.querySelector('#vjs_video_3 > div.vjs-control-bar')
+        const jwAudioPlayer = document.querySelector('div.video-js > div.vjs-control-bar')
 
         if (audio && (wolAudioPlayer || jwAudioPlayer)) {
             if (clearAudioSearchInterval) {
@@ -1712,7 +2088,7 @@ const waitForAudioAvailable = () => {
     }, 500)
 }
 
-const waitForVideoAvailable = () => {
+const waitForVideoAvailable = (callback) => {
     let clearVideoSearchInterval;
     clearVideoSearchInterval = setInterval(async () => {
         const video = document.querySelector('video')
@@ -1725,6 +2101,7 @@ const waitForVideoAvailable = () => {
             videoElement.playbackRate = getPlaybackRate(LS_USER_PREF_VIDEO_PLAYBACK_RATE)
             videoElement.addEventListener('timeupdate', updateSeenStatus)
             videoElement.addEventListener('timeupdate', displaySeenStatus)
+
             displayPlaybackRate()
             displaySeenStatus()
             setTimeout(startSubtitlesHandler, 1000)
@@ -1737,12 +2114,54 @@ const waitForVideoAvailable = () => {
                     }
                 }
             }
+            callback && callback()
         }
     }, 500)
 }
 
 const updateSeenStatus = (ev) => {
     addToLocalStorage('current_time', ev.target.currentTime)
+}
+
+let transcriptionElements;
+let currentTranscriptionHighlighted;
+
+const resetTranscriptions = () => {
+    hasTranscription = null
+    const transcriptionWrapper = document.querySelector('#jw-refined-transcription')
+    if (transcriptionWrapper) {
+        transcriptionWrapper.remove()
+    }
+
+    transcriptionElements = null;
+    currentTranscriptionHighlighted = null;
+}
+
+const updateTranscriptionStatus = (ev) => {
+    const {currentTime} = ev.target
+    if (hasTranscription) {
+        if (!transcriptionElements) {
+            transcriptionElements = Array.from(document.querySelectorAll('.jw-refined-transcription-sentence-clickable'))
+        }
+
+        const currentElementToHighlight = transcriptionElements.find(el => el.dataset.start <= currentTime && el.dataset.end >= currentTime)
+
+        if (currentElementToHighlight === currentTranscriptionHighlighted) {
+            return
+        } else {
+            currentTranscriptionHighlighted?.classList.remove('highlighted')
+        }
+
+        if (currentElementToHighlight) {
+            currentTranscriptionHighlighted = currentElementToHighlight
+            currentTranscriptionHighlighted.classList.add('highlighted')
+            if (hasTranscription && isTranscriptionInSidebar) {
+                currentTranscriptionHighlighted.scrollIntoView({behavior: 'smooth', block: 'nearest'})
+            }
+
+        }
+
+    }
 }
 
 const displaySeenStatus = () => {
@@ -1793,7 +2212,7 @@ const displayPlaybackRate = () => {
         if (isWOL) {
             durationWrapper = document.querySelector('#mep_0 > div > div.mejs-controls > div.mejs-time.mejs-duration-container')
         } else if (isJW) {
-            durationWrapper = document.querySelector('#vjs_video_3 > div.vjs-control-bar > div.vjs-control-group.vjs-progress-group > div.vjs-control-group.vjs-time-display-group')
+            durationWrapper = document.querySelector('div.video-js > div.vjs-control-bar > div.vjs-control-group.vjs-progress-group > div.vjs-control-group.vjs-time-display-group')
         } else {
             return
         }
@@ -1811,7 +2230,7 @@ const displayPlaybackRate = () => {
 
     if (videoElement) {
         const rate = getPlaybackRate(LS_USER_PREF_VIDEO_PLAYBACK_RATE)
-        const durationWrapper = document.querySelector('#vjs_video_3 > div.vjs-control-bar > div.vjs-control-group.vjs-progress-group > div.vjs-control-group.vjs-time-display-group')
+        const durationWrapper = document.querySelector('div .video-js > div.vjs-control-bar > div.vjs-control-group.vjs-progress-group > div.vjs-control-group.vjs-time-display-group')
 
         let playbackRateElement = document.querySelector('.refined-jw-audio-rate')
 
@@ -1857,17 +2276,6 @@ const setPlaybackRate = (rate) => {
     if (videoElement && isJW) {
         setRate(rate, JW_VIDEO_RATE_SELECTORS, LS_USER_PREF_VIDEO_PLAYBACK_RATE);
     }
-}
-
-const getSearchField = () => {
-
-    let searchField = document.querySelector('#standardSearch > form > div.searchFieldContainer > input.searchField')
-
-    if (!searchField) {
-        searchField = document.querySelector('#siteHeader > div.siteFeaturesContainer > div > form > input')
-    }
-
-    return searchField
 }
 
 const blurSearchField = () => {

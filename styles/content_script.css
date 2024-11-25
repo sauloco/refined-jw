@@ -198,6 +198,10 @@ kbd {
         --bg-color: var(--opposite-blue);
     }
 
+    &.new {
+        --bg-color: var(--opposite-red);
+    }
+
     &.stopwatch {
         --bg-color: var(--blue);
         pointer-events: auto !important;
@@ -389,6 +393,7 @@ to take effect, as the specificity is the same */
     display: flex;
     flex-direction: column;
     gap: 2rem;
+    overflow: auto;
 }
 
 .jw-refined-transcription-title {
@@ -401,6 +406,11 @@ to take effect, as the specificity is the same */
 
 .jw-refined-transcription-link {
     line-break: anywhere;
+}
+
+.jw-refined-transcription-text {
+    flex-grow: 1;
+    overflow: auto;
 }
 
 .jw-refined-hint.open {
@@ -724,4 +734,30 @@ to take effect, as the specificity is the same */
 
 .with-action {
     cursor: pointer;
+}
+
+.jw-refined-transcription-sentence-clickable {
+    cursor: pointer;
+    padding: 0.2em 0.5em;
+    border-radius: 0.625em;
+
+    &:hover {
+        background: var(--box-color);
+    }
+
+    &.highlighted {
+        background: var(--box-color);
+    }
+}
+
+.jw-refined-info-box {
+    color: var(--gray);
+    font-size: 0.8em;
+}
+
+.jw-refined-reading-time {
+    color: var(--text-color);
+    font-size: 0.7em;
+    user-select: none;
+
 }

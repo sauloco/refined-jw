@@ -17,8 +17,10 @@ const getSymbol = (key) => {
 }
 
 
-const renderShortcuts = (shortcuts, withAction = false, targetSelector = '.shortcuts-container') => {
+const renderShortcuts = (shortcuts, withAction = false, targetSelector = '.shortcuts-container', filtering = true) => {
     const target = document.querySelector(targetSelector)
+
+    target.innerHTML = ''
 
     const firstRowDescription = "Highlight with color"
     const firstRow = addCell(null)
@@ -41,10 +43,17 @@ const renderShortcuts = (shortcuts, withAction = false, targetSelector = '.short
 
     firstRow.innerHTML += firstRowDescription
 
-    target.innerHTML += `<blockquote class="cell note">Currently highlight support is very limited, you can only create highlights within the same paragraph or verse.</blockquote>`
+    target.innerHTML += `<blockquote class="jw-refined-blockquote cell note">Currently highlight support is very limited, you can only create highlights within the same paragraph or verse.</blockquote>`
 
     for (const [eventKey, shortcut] of Object.entries(shortcuts)) {
-        const {keys, className, description, inRow, action} = shortcut
+        const {keys, className, description, inRow, action, condition} = shortcut
+
+
+        if (filtering && condition !== null && condition !== undefined && condition() === false) {
+            continue
+        }
+
+
         if (!inRow) {
             const cell = addCell(null)
 

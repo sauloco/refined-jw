@@ -84,7 +84,7 @@ kbd:hover {
     gap: 1em;
 }
 
-blockquote {
+.jw-refined-blockquote {
     margin: 0 !important;
     padding: 1rem !important;
     border-left: 5px solid var(--opposite-purple);
