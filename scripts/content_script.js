@@ -338,7 +338,7 @@ const crawlForSeenLinks = () => {
                 seenEl = getSeenIndicator()
                 link.append(seenEl)
             }
-            seenEl.setAttribute('title', 'Click to delete current time and seen indicator')
+            seenEl.setAttribute('title', getLocale('seenIndicatorTooltip'))
             seenEl.onclick = (evt) => {
                 evt.preventDefault()
 
@@ -379,11 +379,13 @@ const displayReadingTime = () => {
     }
 
 
-    const {el: readingArticle} = getFirstElFromList(['article.layout-reading', 'article.article.document#article', '.tabContent.active'])
+    const firstArticle = getFirstElFromList(['article.layout-reading', 'article.article.document#article', '.tabContent.active'])
 
-    if (!readingArticle) {
+    if (!firstArticle) {
         return
     }
+
+    const { el: readingArticle } = firstArticle
 
     const articleHeader = isJW
         ? readingArticle.querySelector('header')
@@ -400,7 +402,7 @@ const displayReadingTime = () => {
 
     const minutes = Math.round(seconds / 60)
 
-    readingTimeEL.innerHTML = `Reading time ${minutes < 1 ? 'less than 1 minute.' : `${minutes} min.`}`
+    readingTimeEL.innerHTML = `${getLocale('readingTime')} ${minutes < 1 ? getLocale('lessThanMinute') : `${minutes} ${getLocale('minuteShort')}.`}`
 
     articleHeader.appendChild(readingTimeEL)
 }
@@ -454,7 +456,7 @@ const displayButtonHint = () => {
                 <span class="buttonIcon" aria-hidden="true">
                     ${REFINED_JW_ICON_SVG}
                 </span>
-                <span class="srText">Open JW Refined</span>
+                <span class="srText">${getLocale('openRefinedJW')}</span>
                 <span class="buttonText">Refined</span>
         `
 
@@ -522,7 +524,7 @@ const addHints = () => {
     renderShortcuts(SHORTCUTS, true)
 
     frame.querySelector('.shortcuts-container').innerHTML += `
-        <div class="note">This popup and button has been added by <a href="https://chromewebstore.google.com/detail/refined-jw/fbiababpnkmpllkemnmbfblkfngiekcd">Refined JW Chrome Extension</a>, it is not part of the official content of the page. If you encounter a problem, please report it on the <a href="https://github.com/sauloco/refined-jw/issues">GitHub issues</a> page.<div>
+        <div class="note">${getLocale('hintNote')}<div>
     `
 
     close.addEventListener('click', () => {
@@ -735,7 +737,7 @@ const startSubtitlesHandler = async () => {
             const title = document.querySelector('#article h1')
 
             text = `<strong>${title.textContent}</strong>
-                    <div class="jw-refined-info-box" style="display: ${hasTranscription ? 'block' : 'none'}"><span class="badge new">New</span> Click on any sentence to jump the video</div>
+                    <div class="jw-refined-info-box" style="display: ${hasTranscription ? 'block' : 'none'}"><span class="badge new">${getLocale('new')}</span> ${getLocale('subtitleInfoBox')}</div>
 ${text}
                     
 <a class="jw-refined-transcription-link" href="${window.location.href}" style="display: ${hasTranscription ? 'inline' : 'none'}">${window.location.href}</a>
@@ -746,12 +748,12 @@ ${text}
 
             transcriptionContainer.innerHTML += `
 <div id="jw-refined-transcription" class="jw-refined-transcription">
-    <span id="jw-refined-transcription-title"  class="jw-refined-transcription-title"><h2 id="anchor_1">Transcription</h2><span class="badge promo">JW Refined</span></span>
+    <span id="jw-refined-transcription-title"  class="jw-refined-transcription-title"><h2 id="anchor_1">${getLocale('transcription')}</h2><span class="badge promo">JW Refined</span></span>
     <div id="jw-refined-transcription-text" class="jw-refined-transcription-text">
         ${hasTranscription ? text : 'No transcription available'}
     </div>
     <button id="download-vtt" class="secondaryButton link" style="display: ${hasTranscription ? 'block' : 'none'}">
-        <span class="buttonText">Download as subtitles</span>
+        <span class="buttonText">${getLocale('downloadAsSubtitles')}</span>
     </button>
 </div>`
 
@@ -930,8 +932,8 @@ function createStopwatch(parent, id) {
         stopwatch.id = `stopwatch-${id}`
     }
 
-    stopwatch.innerHTML = '⏱️ start'
-    stopwatch.title = 'Start Stopwatch'
+    stopwatch.innerHTML = `⏱️ ${getLocale('start')}`
+    stopwatch.title = getLocale('startStopwatch')
 
     parent.appendChild(stopwatch)
 
@@ -940,12 +942,12 @@ function createStopwatch(parent, id) {
         const content = el.innerHTML;
         if (content.includes('⏱️')) {
             stopwatches[id] = startStopwatch(el)
-            el.title = 'Stop Stopwatch'
+            el.title = getLocale('stopStopwatch')
         } else if (content.includes('⏹️')) {
             clearInterval(stopwatches[id])
             delete stopwatches[id]
             el.innerHTML = content.replace('⏹️', '⏱️')
-            el.title = 'Start Stopwatch'
+            el.title = getLocale('startStopwatch')
         }
         usageTracking('stopwatch')
     })
@@ -971,7 +973,7 @@ function addCommentTime(comment, id) {
     }
     speechTimeElement.classList.remove('refined-jw-speech-time-long')
 
-    speechTimeElement.innerHTML = `estimated time ${speechTime}s`
+    speechTimeElement.innerHTML = `${getLocale('estimatedTime')} ${speechTime}${getLocale('secondsShorter')}`
     const speechParent = document.querySelector(`#${id}`).parentElement
 
     createStopwatch(speechParent, id)
@@ -980,7 +982,7 @@ function addCommentTime(comment, id) {
     if (speechTime > 29) {
         speechTimeElement.classList.add('refined-jw-speech-time-long')
         const summarizeBtn = document.createElement('span')
-        summarizeBtn.innerHTML = '✨ summarize' + `<span class="badge free">free</span>`
+        summarizeBtn.innerHTML = `✨ ${getLocale('summarize').toLowerCase()} <span class="badge free">${getLocale('free').toLowerCase()}</span>`
         summarizeBtn.classList.add('refined-jw-speech-time-summarize')
         summarizeBtn.addEventListener('click', summarizeComment)
         summarizeBtn.setAttribute('data-textarea-id', id)
@@ -1008,7 +1010,7 @@ const summarizeComment = (e) => {
 
     const newSpeechTime = calculateSpeechTime(cleanSummary);
 
-    summarizedElement.innerHTML = cleanSummary + `<span class="refined-jw-speech-time">new comment time ${newSpeechTime}s</span>`
+    summarizedElement.innerHTML = cleanSummary + `<span class="refined-jw-speech-time">${getLocale('newCommentTime').toLowerCase()} ${newSpeechTime}${getLocale('secondsShorter')}</span>`
     document.querySelector(`#${taId}`).parentElement.appendChild(summarizedElement)
 
     usageTracking('summarize')
@@ -1544,16 +1546,19 @@ function highlightWithColor(document, color) {
 
     const startElementClassList = document.querySelector(startElementSelector).classList
     if (
-        startElementClassList.contains('jw-refined-transcription-text') || startElementClassList.contains('jw-refined-transcription-title') || startElementClassList.contains('jw-refined-transcription')) {
-        displayPopover('.jw-refined-transcription-title > h2', `<p>Please notice that the Transcription section is unofficial <strong>your highlights will be lost</strong> when you leave the page.</p><p class="popover-dismiss">Click on this popover to dismiss it</p>`);
+        startElementClassList.contains('jw-refined-transcription-text') || startElementClassList.contains('jw-refined-transcription-title') || startElementClassList.contains('jw-refined-transcription')
+    ) {
+        displayPopover('.jw-refined-transcription-title > h2', getLocale('popoverSelectionInTranscriptionLost'));
     } else {
         const homeLink = document.querySelector('#menuHome > a') || document.querySelector('#siteLogo')
         const isHomePage = window.location.href === homeLink.href
 
         if (isHomePage) {
-            displayPopover('#dailyText > div.articlePositioner > div.tabContent.active > a', `<p>Please notice as this page is dynamic <strong>your highlight will be lost</strong> when you leave the page.</p>
-<p>We strongly recommend that you navigate to <a href="${highlightLink.href}" target="_blank" rel="noopener noreferrer">${highlightLink.textContent}</a> page before adding your highlight.</p>
-<p class="popover-dismiss">Click on this popover to dismiss it</p>`);
+            const highlightLink = document.querySelector('.bodyTxt .pGroup a:last-child')
+            displayPopover(
+                '#dailyText > div.articlePositioner > div.tabContent.active > a',
+                getLocale('popoverSelectionInHomePageLost', highlightLink.href, highlightLink.textContent)
+            );
         } else {
             addToLocalStorage('selection', {
                 color,
@@ -1638,7 +1643,7 @@ const SETTINGS_SELECTORS = ['#menuToolsPreferences > a']
 const SHORTCUTS = {
     'Escape': {
         keys: ['Esc'],
-        description: "Close the popup",
+        description: getLocale("closePopup"),
         condition: () => !!getFirstElFromList(ESCAPE_SELECTORS),
         action: ({event, document}) => {
             event.preventDefault()
@@ -1649,7 +1654,7 @@ const SHORTCUTS = {
     },
     'Q': {
         keys: ['Shift', 'Q'],
-        description: "Go to search or query the selected text",
+        description: getLocale("goToSearch"),
         condition: () => !!getSearchField(),
         action: ({event, document}) => {
             const searchField = getSearchField()
@@ -1674,32 +1679,32 @@ const SHORTCUTS = {
     },
     'W': {
         keys: ['Shift', 'W'],
-        description: "Go to Bible or Bible Teachings",
+        description: isWOL ? getLocale("goToBible") : getLocale("goToBibleTeachings"),
         condition: () =>!!getFirstElFromList(BIBLE_SELECTORS),
         action: ({document}) => !!clickFirstFromList(BIBLE_SELECTORS, document)
     },
     'E': {
         keys: ['Shift', 'E'],
-        description: "Go to Publications",
+        description: getLocale("goToPublications"),
         condition: () => !!getFirstElFromList(PUBLICATIONS_SELECTORS),
         action: ({document}) => !!clickFirstFromList(PUBLICATIONS_SELECTORS, document)
     },
     'R': {
         keys: ['Shift', 'R'],
-        description: "Go to Meetings",
+        description: getLocale("goToMeetings"),
         condition: () => !!getFirstElFromList(MEETINGS_SELECTORS),
         action: ({document}) => !!clickFirstFromList(MEETINGS_SELECTORS, document)
     },
     'T': {
         keys: ['Shift', 'T'],
-        description: "Navigate to current day or week",
+        description: getLocale("goToToday"),
         condition: () => !!getFirstElFromList(TODAY_SELECTORS),
         action: ({document}) => !!clickFirstFromList(TODAY_SELECTORS, document)
 
     },
     'P': {
         keys: ['Shift', 'P'],
-        description: "Pin quotes extracted from current selection",
+        description: getLocale("extractQuotes"),
         condition: () => isWOL || isJW,
         action: async ({document}) => {
             if (isWOL) {
@@ -1712,13 +1717,13 @@ const SHORTCUTS = {
     },
     'A': {
         keys: ['Shift', 'A'],
-        description: "Go to Home",
+        description: getLocale("goToHome"),
         condition: () => !!getFirstElFromList(HOME_SELECTORS),
         action: ({document}) => !!clickFirstFromList(HOME_SELECTORS, document)
     },
     'S': {
         keys: ['Shift', 'S'],
-        description: "Share",
+        description: getLocale("share"),
         condition: () => !!getFirstElFromList(SHARE_SELECTORS),
         action: ({document}) => {
 
@@ -1737,7 +1742,7 @@ const SHORTCUTS = {
     },
     'F': {
         keys: ['Shift', 'F'],
-        description: "Toggle fullscreen",
+        description: getLocale("toggleFullscreen"),
         condition: () => !!videoElement,
         action: ({document}) => {
             const selectors = ['div.video-js button.vjs-fullscreen-control']
@@ -1746,13 +1751,13 @@ const SHORTCUTS = {
     },
     'L': {
         keys: ['Shift', 'L'],
-        description: "Go to Languages",
+        description: getLocale("goToLibraries"),
         condition: () => !!getFirstElFromList(LANGUAGES_SELECTORS),
         action: ({document}) => !!clickFirstFromList(LANGUAGES_SELECTORS, document)
     },
     'C': {
         keys: ['Shift', 'C'],
-        description: "Toggle captions",
+        description: getLocale("toggleCaptions"),
         condition: () => !!videoElement,
         action: ({document}) => {
             const selectors = ['div.video-js > div:nth-child(10) > ul > li.vjs-menu-item.vjs-menu-item-radio:not(.vjs-selected)']
@@ -1762,20 +1767,20 @@ const SHORTCUTS = {
     },
     'B': {
         keys: ['Shift', 'B'],
-        description: "Navigate to previous article, week or day",
+        description: getLocale("goToPrevious"),
         condition: () => !!getFirstElFromList(PREV_NAVIGATION_SELECTORS),
         action: ({document}) => !!clickFirstFromList(PREV_NAVIGATION_SELECTORS, document)
     },
     'N': {
         keys: ['Shift', 'N'],
-        description: "Navigate to next article, week or day",
+        description: getLocale("goToNext"),
         condition: () => !!getFirstElFromList(NEXT_NAVIGATION_SELECTORS),
         action: ({document}) => !!clickFirstFromList(NEXT_NAVIGATION_SELECTORS, document)
     },
     '1': {
         keys: ['1'],
         className: 'refined-jw-yellow-bg',
-        description: "Highlight yellow",
+        description: getLocale("highlightYellow"),
         inRow: true,
         action: ({event, document}) => {
             event.preventDefault()
@@ -1787,7 +1792,7 @@ const SHORTCUTS = {
     '2': {
         keys: ['2'],
         className: 'refined-jw-green-bg',
-        description: "Highlight green",
+        description: getLocale("highlightGreen"),
         inRow: true,
         action: ({event, document}) => {
             event.preventDefault()
@@ -1799,7 +1804,7 @@ const SHORTCUTS = {
     '3': {
         keys: ['3'],
         className: 'refined-jw-blue-bg',
-        description: "Highlight blue",
+        description: getLocale("highlightBlue"),
         inRow: true,
         action: ({event, document}) => {
             event.preventDefault()
@@ -1811,7 +1816,7 @@ const SHORTCUTS = {
     '4': {
         keys: ['4'],
         className: 'refined-jw-purple-bg',
-        description: "Highlight purple",
+        description: getLocale("highlightPurple"),
         inRow: true,
         action: ({event, document}) => {
             event.preventDefault()
@@ -1823,7 +1828,7 @@ const SHORTCUTS = {
     '5': {
         keys: ['5'],
         className: 'refined-jw-red-bg',
-        description: "Highlight red",
+        description: getLocale("highlightRed"),
         inRow: true,
         action: ({event, document}) => {
             event.preventDefault()
@@ -1835,7 +1840,7 @@ const SHORTCUTS = {
     '6': {
         keys: ['6'],
         className: 'refined-jw-orange-bg',
-        description: "Highlight orange",
+        description: getLocale("highlightOrange"),
         inRow: true,
         action: ({event, document}) => {
             event.preventDefault()
@@ -1846,7 +1851,7 @@ const SHORTCUTS = {
     },
     ',': {
         keys: [','],
-        description: "Go to Settings",
+        description: getLocale("goToSettings"),
         condition: () => !!getFirstElFromList(SETTINGS_SELECTORS),
         action: ({document}) => {
             if (!isWOL) {
@@ -1858,7 +1863,7 @@ const SHORTCUTS = {
     },
     ' ': {
         keys: [' '],
-        description: "Current audio or video play/pause",
+        description: getLocale("currentMediaPlayPause"),
         condition: () => !!videoElement || !!audioElement,
         action: ({event}) => {
             event.preventDefault()
@@ -1880,7 +1885,7 @@ const SHORTCUTS = {
     },
     '>': {
         keys: ['>'],
-        description: "Increase playback speed of current audio or video",
+        description: getLocale("increasePlaybackSpeed"),
         condition: () => !!videoElement || !!audioElement,
         action: ({event}) => {
             event.preventDefault()
@@ -1898,7 +1903,7 @@ const SHORTCUTS = {
     },
     '<': {
         keys: ['<'],
-        description: "Decrease playback speed of current audio or video",
+        description: getLocale("decreasePlaybackSpeed"),
         condition: () => !!videoElement || !!audioElement,
         action: ({event}) => {
             event.preventDefault()
@@ -1917,7 +1922,7 @@ const SHORTCUTS = {
     },
     'ArrowRight': {
         keys: ['→'],
-        description: "Jump audio to next verse, paragraph or section. If not possible then skip forward by 5 seconds",
+        description: getLocale("jumpForward"),
         condition: () => !!videoElement || !!audioElement,
         action: ({event}) => {
             event.preventDefault()
@@ -1945,7 +1950,7 @@ const SHORTCUTS = {
     },
     'ArrowLeft': {
         keys: ['←'],
-        description: "Jump audio to previous verse, paragraph or section. If not possible then skip backward by 5 seconds",
+        description: getLocale("jumpBackward"),
         condition: () => !!videoElement || !!audioElement,
         action: ({event}) => {
             event.preventDefault()
@@ -1975,7 +1980,7 @@ const SHORTCUTS = {
     },
     '+': {
         keys: ['+'],
-        description: "Increase font size",
+        description: getLocale("increaseFontSize"),
         condition: () => isWOL,
         action: ({event}) => {
 
@@ -1995,7 +2000,7 @@ const SHORTCUTS = {
     },
     '-': {
         keys: ['-'],
-        description: "Decrease font size",
+        description: getLocale("decreaseFontSize"),
         condition: () => isWOL,
         action: ({event}) => {
 
@@ -2195,7 +2200,7 @@ const displaySeenStatus = () => {
             const {el} = result
             let seenEl = getSeenIndicator()
             el.append(seenEl)
-            seenEl.setAttribute('title', 'Click to delete current time and seen indicator')
+            seenEl.setAttribute('title', getLocale('seenIndicatorTooltip'))
             seenEl.onclick = () => {
                 deleteSeenIndicator()
                 seenEl.parentElement.removeChild(seenEl)
@@ -2305,7 +2310,7 @@ const highlightSelection = (selection, color) => {
 
     const surroundElement = document.createElement('span')
     surroundElement.id = `highlighted-${Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15)}`
-    surroundElement.title = 'Click to delete selection'
+    surroundElement.title = getLocale("removeHighlight")
     if (color) {
         surroundElement.classList.add(`highlighted`, `refined-jw-${color}-bg`)
     }

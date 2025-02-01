@@ -12,7 +12,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
 const enableRefinedJW = (version) => {
     const title = document.querySelector('h1');
-    title.innerHTML = `Refined JW is enabled`
+    title.innerHTML = getLocale('popupTitlePositive')
     const versionEl = document.querySelector('.version');
     versionEl.innerHTML = `v${version}`
 }

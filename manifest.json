@@ -1,8 +1,9 @@
 {
-  "name": "Refined JW",
-  "description": "Enhance your reading experience of JW official site and Watchtower Online Library (WOL) with Refined JW",
+  "name": "__MSG_extensionName__",
+  "description": "__MSG_extensionDescription__",
   "version": "1.7.0",
   "manifest_version": 3,
+  "default_locale": "es",
   "background": {
     "service_worker": "./scripts/background.js"
   },
@@ -26,6 +27,7 @@
       ],
       "run_at": "document_end",
       "js": [
+        "./scripts/i18n.js",
         "./scripts/underscore-umd-min.js",
         "./scripts/underscore.string.min.js",
         "./popup/popup.js",

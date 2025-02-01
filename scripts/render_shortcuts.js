@@ -10,7 +10,7 @@ const getSymbol = (key) => {
         case 'Meta':
             return isMac ? '⌘ ' : 'Win '
         case ' ':
-            return 'Space'
+            return chrome.i18n.getMessage('spaceKey')
         default:
             return ''
     }
@@ -22,7 +22,7 @@ const renderShortcuts = (shortcuts, withAction = false, targetSelector = '.short
 
     target.innerHTML = ''
 
-    const firstRowDescription = "Highlight with color"
+    const firstRowDescription = getLocale('highlightWithColor')
     const firstRow = addCell(null)
     target.appendChild(firstRow)
 
@@ -43,7 +43,7 @@ const renderShortcuts = (shortcuts, withAction = false, targetSelector = '.short
 
     firstRow.innerHTML += firstRowDescription
 
-    target.innerHTML += `<blockquote class="jw-refined-blockquote cell note">Currently highlight support is very limited, you can only create highlights within the same paragraph or verse.</blockquote>`
+    target.innerHTML += `<blockquote class="jw-refined-blockquote cell note">${getLocale('highlightNote')}</blockquote>`
 
     for (const [eventKey, shortcut] of Object.entries(shortcuts)) {
         const {keys, className, description, inRow, action, condition} = shortcut

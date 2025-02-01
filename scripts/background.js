@@ -25,11 +25,13 @@ chrome.runtime.onInstalled.addListener(function (tabId) {
     // Create one test item for each context type.
     let contexts = [
         'selection',
-        // 'link',
+        // 'link'
     ];
     for (let i = 0; i < contexts.length; i++) {
         let context = contexts[i];
-        let title = `Extract quotes from ${context}`;
+        let from = chrome.i18n.getMessage(context)
+        let title = chrome.i18n.getMessage('extractQuotesFrom', from.toLowerCase());
+
         chrome.contextMenus.create({
             title: title,
             contexts: [context],

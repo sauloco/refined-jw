@@ -1,0 +1,185 @@
+{
+  "extensionName": {
+    "message": "Refined JW"
+  },
+  "extensionDescription": {
+    "message": "Enhance your reading experience of JW official site and Watchtower Online Library (WOL) with Refined JW"
+  },
+  "popupTitlePositive": {
+    "message": "Refined JW is enabled"
+  },
+  "popupTitleNegative": {
+    "message": "Refined JW is not enabled"
+  },
+  "popupNote": {
+    "message": "Note this extension only activates when you visit <a href=\"https://jw.org\">JW.org</a> or <a href=\"https://wol.jw.org\">the Watchtower Online Library (WOL)</a>"
+  },
+  "highlightWithColor": {
+    "message": "Highlight with color"
+  },
+  "highlightNote": {
+    "message": "Currently highlight support is very limited, you can only create highlights within the same paragraph or verse."
+  },
+  "selection": {
+    "message": "Selection"
+  },
+  "link": {
+    "message": "Link"
+  },
+  "extractQuotesFrom": {
+    "message": "Extract quotes from $1"
+  },
+  "spaceKey": {
+    "message": "Space"
+  },
+  "seenIndicatorTooltip": {
+    "message": "Click to delete current time and seen indicator"
+  },
+  "readingTime": {
+    "message": "Reading time"
+  },
+  "lessThanMinute": {
+    "message": "Less than 1 minute"
+  },
+  "minuteShort": {
+    "message": "min"
+  },
+  "openRefinedJW": {
+    "message": "Open Refined JW"
+  },
+  "hintNote": {
+    "message": "This popup and button has been added by <a href=\"https://chromewebstore.google.com/detail/refined-jw/fbiababpnkmpllkemnmbfblkfngiekcd\">Refined JW Chrome Extension</a>, it is not part of the official content of the page. If you encounter a problem, please report it on the <a href=\"https://github.com/sauloco/refined-jw/issues\">GitHub issues</a> page."
+  },
+  "new": {
+    "message": "New"
+  },
+  "subtitleInfoBox": {
+    "message": "Click on any sentence to jump the video"
+  },
+  "transcription": {
+    "message": "Transcription"
+  },
+  "downloadAsSubtitles": {
+    "message": "Download as subtitles"
+  },
+  "start": {
+    "message": "Start"
+  },
+  "startStopwatch": {
+    "message": "Start Stopwatch"
+  },
+  "stopStopwatch": {
+    "message": "Stop Stopwatch"
+  },
+  "estimatedTime": {
+    "message": "Estimated time"
+  },
+  "secondsShorter": {
+    "message": "s"
+  },
+  "summarize": {
+    "message": "Summarize"
+  },
+  "free": {
+    "message": "Free"
+  },
+  "newCommentTime": {
+    "message": "New comment time"
+  },
+  "popoverSelectionInTranscriptionLost": {
+    "message": "<p>Please notice that as Transcription section is unofficial <strong>your highlights will be lost</strong> when you leave the page.</p><p class=\"popover-dismiss\">Click on this popover to dismiss it</p>"
+  },
+  "popoverSelectionInHomePageLost": {
+    "message": "<p>Please notice as this page is dynamic <strong>your highlight will be lost</strong> when you leave the page.</p>\n<p>We strongly recommend that you navigate to <a href=\"$1\" target=\"_blank\" rel=\"noopener noreferrer\">$2</a> page before adding your highlight.</p><p class=\"popover-dismiss\">Click on this popover to dismiss it</p>"
+  },
+  "closePopup": {
+    "message": "Close the popup"
+  },
+  "goToSearch": {
+    "message": "Go to search or query the selected text"
+  },
+  "goToBible": {
+    "message": "Go to Bible"
+  },
+  "goToBibleTeachings": {
+    "message": "Go to Bible Teachings"
+  },
+  "goToPublications": {
+    "message": "Go to Publications"
+  },
+  "goToMeetings": {
+    "message": "Go to Meetings"
+  },
+  "goToToday": {
+    "message": "Navigate to current day or week"
+  },
+  "extractQuotes": {
+    "message": "Pin quotes extracted from current selection"
+  },
+  "goToHome": {
+    "message": "Go to Home"
+  },
+  "share": {
+    "message": "Share"
+  },
+  "toggleFullscreen": {
+    "message": "Toggle fullscreen"
+  },
+  "goToLibraries": {
+    "message": "Go to Libraries"
+  },
+  "toggleCaptions": {
+    "message": "Toggle captions"
+  },
+  "goToPrevious": {
+    "message": "Navigate to previous article, week or day"
+  },
+  "goToNext": {
+    "message": "Navigate to next article, week or day"
+  },
+  "highlightYellow": {
+    "message": "Highlight yellow"
+  },
+  "highlightGreen": {
+    "message": "Highlight green"
+  },
+  "highlightBlue": {
+    "message": "Highlight blue"
+  },
+  "highlightPurple": {
+    "message": "Highlight purple"
+  },
+  "highlightRed": {
+    "message": "Highlight red"
+  },
+  "highlightOrange": {
+    "message": "Highlight orange"
+  },
+  "goToSettings": {
+    "message": "Go to Preferences"
+  },
+  "currentMediaPlayPause": {
+    "message": "Current audio or video play/pause"
+  },
+  "increasePlaybackSpeed": {
+    "message": "Increase playback speed of current audio or video"
+  },
+  "decreasePlaybackSpeed": {
+    "message": "Decrease playback speed of current audio or video"
+  },
+  "jumpForward": {
+    "message": "Jump audio to next verse, paragraph or section. If not possible then skip forward by 5 seconds"
+  },
+  "jumpBackward": {
+    "message": "Jump audio to previous verse, paragraph or section. If not possible then skip backward by 5 seconds"
+  },
+  "increaseFontSize": {
+    "message": "Increase font size"
+  },
+  "decreaseFontSize": {
+    "message": "Decrease font size"
+  },
+  "removeHighlight": {
+    "message": "Click to delete selection"
+  }
+}
