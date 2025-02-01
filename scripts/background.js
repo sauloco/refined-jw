@@ -30,7 +30,7 @@ chrome.runtime.onInstalled.addListener(function (tabId) {
     for (let i = 0; i < contexts.length; i++) {
         let context = contexts[i];
         let from = chrome.i18n.getMessage(context)
-        let title = chrome.i18n.getMessage('extractQuotesFrom', from.toLowerCase());
+        let title = chrome.i18n.getMessage('extractQuotesFrom', [from.toLowerCase()]);
 
         chrome.contextMenus.create({
             title: title,

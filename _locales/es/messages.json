@@ -5,13 +5,13 @@
   "extensionDescription": {
     "message": "Mejora tu experiencia de lectura de JW y Watchtower Online Library (WOL) con Refined JW"
   },
-  "popupTitle": {
+  "popupTitlePositive": {
     "message": "Refined JW está habilitado"
   },
   "popupTitleNegative": {
     "message": "Refined JW está deshabilitado"
   },
-  "note": {
+  "popupNote": {
     "message": "Note que esta extensión solo se activa cuando visitas <a href=\"https://jw.org\">JW.org</a> o <a href=\"https://wol.jw.org\">la Biblioteca Online (WOL)</a>"
   },
   "highlightWithColor": {
