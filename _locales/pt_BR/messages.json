@@ -1,0 +1,185 @@
+{
+  "extensionName": {
+    "message": "Refined JW"
+  },
+  "extensionDescription": {
+    "message": "Melhore sua experiência de leitura em JW e na Biblioteca Online da Torre de Vigia (WOL) com o Refined JW"
+  },
+  "popupTitlePositive": {
+    "message": "Refined JW está habilitado"
+  },
+  "popupTitleNegative": {
+    "message": "Refined JW está desabilitado"
+  },
+  "popupNote": {
+    "message": "Observe que esta extensão só se ativa quando você visita <a href=\"https://jw.org\">JW.org</a> ou <a href=\"https://wol.jw.org\">a Biblioteca Online (WOL)</a>"
+  },
+  "highlightWithColor": {
+    "message": "Realçar com cor"
+  },
+  "highlightNote": {
+    "message": "Atualmente, o suporte de realce é muito limitado; você só pode realçar dentro do mesmo parágrafo ou versículo."
+  },
+  "selection": {
+    "message": "Seleção"
+  },
+  "link": {
+    "message": "Link"
+  },
+  "extractQuotesFrom": {
+    "message": "Extrair citações de $1"
+  },
+  "spaceKey": {
+    "message": "Espaço"
+  },
+  "seenIndicatorTooltip": {
+    "message": "Clique para limpar o tempo atual e o indicador de visualização"
+  },
+  "readingTime": {
+    "message": "Tempo de leitura"
+  },
+  "lessThanMinute": {
+    "message": "Menos de 1 minuto"
+  },
+  "minuteShort": {
+    "message": "min"
+  },
+  "openRefinedJW": {
+    "message": "Abrir Refined JW"
+  },
+  "hintNote": {
+    "message": "Este menu suspenso e o botão JW Refined foram adicionados pela <a href=\\\"https://chromewebstore.google.com/detail/refined-jw/fbiababpnkmpllkemnmbfblkfngiekcd\\\">extensão de Google Chrome Refined JW</a>; não fazem parte do conteúdo oficial da página. Se você encontrar algum problema, por favor, reporte-o em <a href=\\\"https://github.com/sauloco/refined-jw/issues\\\">a página de issues do projeto no GitHub</a>."
+  },
+  "new": {
+    "message": "Novo"
+  },
+  "subtitleInfoBox": {
+    "message": "Clique em qualquer frase para pular o vídeo"
+  },
+  "transcription": {
+    "message": "Transcrição"
+  },
+  "downloadAsSubtitles": {
+    "message": "Baixar como legendas"
+  },
+  "start": {
+    "message": "Iniciar"
+  },
+  "startStopwatch": {
+    "message": "Iniciar cronômetro"
+  },
+  "stopStopwatch": {
+    "message": "Parar cronômetro"
+  },
+  "estimatedTime": {
+    "message": "Tempo estimado"
+  },
+  "secondsShorter": {
+    "message": "s"
+  },
+  "summarize": {
+    "message": "Resumir"
+  },
+  "free": {
+    "message": "Grátis"
+  },
+  "newCommentTime": {
+    "message": "Tempo de novo comentário"
+  },
+  "popoverSelectionInTranscriptionLost": {
+    "message": "<p>Observe que a seção de Transcrição não é oficial; portanto, <strong>qualquer realce que você fizer aqui será perdido</strong> ao atualizar a página.</p><p class=\"popover-dismiss\">Clique aqui para ocultar esta mensagem</p>"
+  },
+  "popoverSelectionInHomePageLost": {
+    "message": "<p>Observe que, como o conteúdo desta página é dinâmico, <strong>qualquer realce que você fizer aqui será perdido</strong> ao atualizar a página.</p><p>Recomenda-se navegar para <a href=\"$1\" target=\"_blank\" rel=\"noopener noreferrer\">$2</a> antes de realçar o conteúdo.</p><p class=\"popover-dismiss\">Clique aqui para ocultar esta mensagem</p>"
+  },
+  "closePopup": {
+    "message": "Feche o menu suspenso"
+  },
+  "goToSearch": {
+    "message": "Ir para a pesquisa ou consultar o texto selecionado"
+  },
+  "goToBible": {
+    "message": "Ir para a Bíblia"
+  },
+  "goToBibleTeachings": {
+    "message": "Ir para Ensinos Bíblicos"
+  },
+  "goToPublications": {
+    "message": "Ir para Publicações"
+  },
+  "goToMeetings": {
+    "message": "Ir para Reuniões"
+  },
+  "goToToday": {
+    "message": "Navegar para hoje ou para a semana atual"
+  },
+  "extractQuotes": {
+    "message": "Extrair citações da seleção"
+  },
+  "goToHome": {
+    "message": "Ir para o início"
+  },
+  "share": {
+    "message": "Compartilhar"
+  },
+  "toggleFullscreen": {
+    "message": "Tela cheia"
+  },
+  "goToLibraries": {
+    "message": "Ir para Bibliotecas"
+  },
+  "toggleCaptions": {
+    "message": "Ativar ou desativar legendas"
+  },
+  "goToPrevious": {
+    "message": "Ir para o artigo, semana ou dia anterior"
+  },
+  "goToNext": {
+    "message": "Ir para o próximo artigo, semana ou dia"
+  },
+  "highlightYellow": {
+    "message": "Realçar em amarelo"
+  },
+  "highlightGreen": {
+    "message": "Realçar em verde"
+  },
+  "highlightBlue": {
+    "message": "Realçar em azul"
+  },
+  "highlightPurple": {
+    "message": "Realçar em roxo ou violeta"
+  },
+  "highlightRed": {
+    "message": "Realçar em vermelho"
+  },
+  "highlightOrange": {
+    "message": "Realçar em laranja"
+  },
+  "goToSettings": {
+    "message": "Ir para Configurações"
+  },
+  "currentMediaPlayPause": {
+    "message": "Reproduzir ou pausar o áudio ou vídeo atual"
+  },
+  "increasePlaybackSpeed": {
+    "message": "Aumentar a velocidade de reprodução do áudio ou vídeo atual"
+  },
+  "decreasePlaybackSpeed": {
+    "message": "Reduzir a velocidade de reprodução do áudio ou vídeo atual"
+  },
+  "jumpForward": {
+    "message": "Pular o áudio ou vídeo para a próxima frase, parágrafo ou seção. Se não for possível, avançará 5 segundos"
+  },
+  "jumpBackward": {
+    "message": "Pular o áudio ou vídeo para a frase, parágrafo ou seção anterior. Se não for possível, voltará 5 segundos"
+  },
+  "increaseFontSize": {
+    "message": "Aumentar o tamanho da fonte"
+  },
+  "decreaseFontSize": {
+    "message": "Reduzir o tamanho da fonte"
+  },
+  "removeHighlight": {
+    "message": "Clique aqui para remover realce"
+  }
+}

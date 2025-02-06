@@ -1,0 +1,185 @@
+{
+  "extensionName": {
+    "message": "Refined JW"
+  },
+  "extensionDescription": {
+    "message": "Verbessere dein Leseerlebnis bei JW und in der Watchtower Online Library (WOL) mit Refined JW"
+  },
+  "popupTitlePositive": {
+    "message": "Refined JW ist aktiviert"
+  },
+  "popupTitleNegative": {
+    "message": "Refined JW ist deaktiviert"
+  },
+  "popupNote": {
+    "message": "Bitte beachte, dass diese Erweiterung nur aktiv ist, wenn du <a href=\"https://jw.org\">JW.org</a> oder <a href=\"https://wol.jw.org\">die Online-Bibliothek (WOL)</a> besuchst."
+  },
+  "highlightWithColor": {
+    "message": "Mit Farbe hervorheben"
+  },
+  "highlightNote": {
+    "message": "Derzeit ist die Unterstützung für Hervorhebungen sehr eingeschränkt – du kannst nur innerhalb desselben Absatzes oder Verses hervorheben."
+  },
+  "selection": {
+    "message": "Auswahl"
+  },
+  "link": {
+    "message": "Link"
+  },
+  "extractQuotesFrom": {
+    "message": "Zitate aus $1 extrahieren"
+  },
+  "spaceKey": {
+    "message": "Leertaste"
+  },
+  "seenIndicatorTooltip": {
+    "message": "Klicken, um die aktuelle Zeit und den Anzeigeindikator zu löschen"
+  },
+  "readingTime": {
+    "message": "Lesezeit"
+  },
+  "lessThanMinute": {
+    "message": "Weniger als 1 Minute"
+  },
+  "minuteShort": {
+    "message": "min"
+  },
+  "openRefinedJW": {
+    "message": "Refined JW öffnen"
+  },
+  "hintNote": {
+    "message": "Dieses Dropdown-Menü und die Schaltfläche „JW Refined“ wurden durch die <a href=\\\"https://chromewebstore.google.com/detail/refined-jw/fbiababpnkmpllkemnmbfblkfngiekcd\\\">Chrome-Erweiterung Refined JW</a> hinzugefügt und sind kein offizieller Bestandteil der Seite. Falls Probleme auftreten, melde sie bitte auf der <a href=\\\"https://github.com/sauloco/refined-jw/issues\\\">GitHub-Issue-Seite des Projekts</a>."
+  },
+  "new": {
+    "message": "Neu"
+  },
+  "subtitleInfoBox": {
+    "message": "Klicke auf einen beliebigen Satz, um im Video vorzuspringen"
+  },
+  "transcription": {
+    "message": "Transkription"
+  },
+  "downloadAsSubtitles": {
+    "message": "Als Untertitel herunterladen"
+  },
+  "start": {
+    "message": "Start"
+  },
+  "startStopwatch": {
+    "message": "Stoppuhr starten"
+  },
+  "stopStopwatch": {
+    "message": "Stoppuhr anhalten"
+  },
+  "estimatedTime": {
+    "message": "Geschätzte Zeit"
+  },
+  "secondsShorter": {
+    "message": "s"
+  },
+  "summarize": {
+    "message": "Zusammenfassen"
+  },
+  "free": {
+    "message": "Kostenlos"
+  },
+  "newCommentTime": {
+    "message": "Zeit für neuen Kommentar"
+  },
+  "popoverSelectionInTranscriptionLost": {
+    "message": "<p>Beachte, dass der Abschnitt „Transkription“ nicht offiziell ist; daher <strong>gehen alle Hervorhebungen hier verloren</strong>, wenn du die Seite aktualisierst.</p><p class=\"popover-dismiss\">Klicke hier, um diese Nachricht auszublenden</p>"
+  },
+  "popoverSelectionInHomePageLost": {
+    "message": "<p>Beachte, dass der Inhalt dieser Seite dynamisch ist, <strong>alle Hervorhebungen hier werden beim Aktualisieren der Seite verloren gehen</strong>.</p><p>Es wird empfohlen, vor dem Hervorheben zu <a href=\"$1\" target=\"_blank\" rel=\"noopener noreferrer\">$2</a> zu navigieren.</p><p class=\"popover-dismiss\">Klicke hier, um diese Nachricht auszublenden</p>"
+  },
+  "closePopup": {
+    "message": "Dropdown-Menü schließen"
+  },
+  "goToSearch": {
+    "message": "Zur Suche gehen oder den ausgewählten Text nachschlagen"
+  },
+  "goToBible": {
+    "message": "Zur Bibel gehen"
+  },
+  "goToBibleTeachings": {
+    "message": "Zu biblischen Lehren gehen"
+  },
+  "goToPublications": {
+    "message": "Zu Publikationen gehen"
+  },
+  "goToMeetings": {
+    "message": "Zu Zusammenkünften gehen"
+  },
+  "goToToday": {
+    "message": "Zu heute oder zur aktuellen Woche navigieren"
+  },
+  "extractQuotes": {
+    "message": "Zitate aus der Auswahl extrahieren"
+  },
+  "goToHome": {
+    "message": "Zur Startseite gehen"
+  },
+  "share": {
+    "message": "Teilen"
+  },
+  "toggleFullscreen": {
+    "message": "Vollbild"
+  },
+  "goToLibraries": {
+    "message": "Zu Bibliotheken gehen"
+  },
+  "toggleCaptions": {
+    "message": "Untertitel ein- oder ausschalten"
+  },
+  "goToPrevious": {
+    "message": "Zum vorherigen Artikel, zur vorherigen Woche oder zum vorherigen Tag gehen"
+  },
+  "goToNext": {
+    "message": "Zum nächsten Artikel, zur nächsten Woche oder zum nächsten Tag gehen"
+  },
+  "highlightYellow": {
+    "message": "Mit Gelb hervorheben"
+  },
+  "highlightGreen": {
+    "message": "Mit Grün hervorheben"
+  },
+  "highlightBlue": {
+    "message": "Mit Blau hervorheben"
+  },
+  "highlightPurple": {
+    "message": "Mit Lila oder Violett hervorheben"
+  },
+  "highlightRed": {
+    "message": "Mit Rot hervorheben"
+  },
+  "highlightOrange": {
+    "message": "Mit Orange hervorheben"
+  },
+  "goToSettings": {
+    "message": "Zu den Einstellungen gehen"
+  },
+  "currentMediaPlayPause": {
+    "message": "Aktuelles Audio oder Video abspielen oder pausieren"
+  },
+  "increasePlaybackSpeed": {
+    "message": "Wiedergabegeschwindigkeit für das aktuelle Audio oder Video erhöhen"
+  },
+  "decreasePlaybackSpeed": {
+    "message": "Wiedergabegeschwindigkeit für das aktuelle Audio oder Video verringern"
+  },
+  "jumpForward": {
+    "message": "Zum nächsten Satz, Absatz oder Abschnitt springen. Wenn das nicht möglich ist, werden 5 Sekunden vorgespult"
+  },
+  "jumpBackward": {
+    "message": "Zum vorherigen Satz, Absatz oder Abschnitt springen. Wenn das nicht möglich ist, werden 5 Sekunden zurückgespult"
+  },
+  "increaseFontSize": {
+    "message": "Schriftgröße vergrößern"
+  },
+  "decreaseFontSize": {
+    "message": "Schriftgröße verkleinern"
+  },
+  "removeHighlight": {
+    "message": "Klicke hier, um die Hervorhebung zu entfernen"
+  }
+}

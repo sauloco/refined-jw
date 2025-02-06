@@ -1,0 +1,185 @@
+{
+  "extensionName": {
+    "message": "Refined JW"
+  },
+  "extensionDescription": {
+    "message": "Улучшите свой опыт чтения JW и библиотеки Watchtower (WOL) с помощью Refined JW"
+  },
+  "popupTitlePositive": {
+    "message": "Refined JW включён"
+  },
+  "popupTitleNegative": {
+    "message": "Refined JW выключён"
+  },
+  "popupNote": {
+    "message": "Обратите внимание, что это расширение активно только при посещении <a href=\"https://jw.org\">JW.org</a> или <a href=\"https://wol.jw.org\">Библиотеки Watchtower (WOL)</a>"
+  },
+  "highlightWithColor": {
+    "message": "Выделить цветом"
+  },
+  "highlightNote": {
+    "message": "В настоящее время возможности выделения очень ограничены: можно выделять только в пределах одного абзаца или стиха."
+  },
+  "selection": {
+    "message": "Выделение"
+  },
+  "link": {
+    "message": "Ссылка"
+  },
+  "extractQuotesFrom": {
+    "message": "Извлечь цитаты из $1"
+  },
+  "spaceKey": {
+    "message": "Пробел"
+  },
+  "seenIndicatorTooltip": {
+    "message": "Нажмите, чтобы сбросить текущее время и индикатор просмотра"
+  },
+  "readingTime": {
+    "message": "Время чтения"
+  },
+  "lessThanMinute": {
+    "message": "Менее 1 минуты"
+  },
+  "minuteShort": {
+    "message": "мин"
+  },
+  "openRefinedJW": {
+    "message": "Открыть Refined JW"
+  },
+  "hintNote": {
+    "message": "Это выпадающее меню и кнопка JW Refined добавлены <a href=\\\"https://chromewebstore.google.com/detail/refined-jw/fbiababpnkmpllkemnmbfblkfngiekcd\\\">расширением Refined JW для Google Chrome</a> и не являются официальной частью контента сайта. Если вы обнаружите проблему, пожалуйста, сообщите об этом на <a href=\\\"https://github.com/sauloco/refined-jw/issues\\\">странице GitHub issues проекта</a>."
+  },
+  "new": {
+    "message": "Новое"
+  },
+  "subtitleInfoBox": {
+    "message": "Нажмите на любое предложение, чтобы перейти вперёд в видео"
+  },
+  "transcription": {
+    "message": "Транскрипция"
+  },
+  "downloadAsSubtitles": {
+    "message": "Загрузить как субтитры"
+  },
+  "start": {
+    "message": "Начать"
+  },
+  "startStopwatch": {
+    "message": "Запустить секундомер"
+  },
+  "stopStopwatch": {
+    "message": "Остановить секундомер"
+  },
+  "estimatedTime": {
+    "message": "Расчетное время"
+  },
+  "secondsShorter": {
+    "message": "с"
+  },
+  "summarize": {
+    "message": "Резюмировать"
+  },
+  "free": {
+    "message": "Бесплатно"
+  },
+  "newCommentTime": {
+    "message": "Время нового комментария"
+  },
+  "popoverSelectionInTranscriptionLost": {
+    "message": "<p>Обратите внимание, что раздел «Транскрипция» не является официальным, поэтому <strong>любое выделение, сделанное здесь, будет потеряно</strong> при обновлении страницы.</p><p class=\"popover-dismiss\">Нажмите здесь, чтобы скрыть это сообщение</p>"
+  },
+  "popoverSelectionInHomePageLost": {
+    "message": "<p>Обратите внимание, что поскольку содержимое этой страницы динамическое, <strong>любое выделение, сделанное здесь, будет потеряно</strong> при обновлении страницы.</p><p>Рекомендуется перейти на <a href=\"$1\" target=\"_blank\" rel=\"noopener noreferrer\">$2</a> перед тем, как выделять содержимое.</p><p class=\"popover-dismiss\">Нажмите здесь, чтобы скрыть это сообщение</p>"
+  },
+  "closePopup": {
+    "message": "Закройте всплывающее меню"
+  },
+  "goToSearch": {
+    "message": "Перейти к поиску или проверить выделенный текст"
+  },
+  "goToBible": {
+    "message": "Перейти к Библии"
+  },
+  "goToBibleTeachings": {
+    "message": "Перейти к библейским учениям"
+  },
+  "goToPublications": {
+    "message": "Перейти к публикациям"
+  },
+  "goToMeetings": {
+    "message": "Перейти к собраниям"
+  },
+  "goToToday": {
+    "message": "Перейти на сегодня или на текущую неделю"
+  },
+  "extractQuotes": {
+    "message": "Извлечь цитаты из выделенного"
+  },
+  "goToHome": {
+    "message": "Перейти на главную"
+  },
+  "share": {
+    "message": "Поделиться"
+  },
+  "toggleFullscreen": {
+    "message": "Полноэкранный режим"
+  },
+  "goToLibraries": {
+    "message": "Перейти к библиотекам"
+  },
+  "toggleCaptions": {
+    "message": "Включить или выключить субтитры"
+  },
+  "goToPrevious": {
+    "message": "Перейти к предыдущей статье, неделе или дню"
+  },
+  "goToNext": {
+    "message": "Перейти к следующей статье, неделе или дню"
+  },
+  "highlightYellow": {
+    "message": "Выделить желтым"
+  },
+  "highlightGreen": {
+    "message": "Выделить зеленым"
+  },
+  "highlightBlue": {
+    "message": "Выделить синим"
+  },
+  "highlightPurple": {
+    "message": "Выделить фиолетовым или лиловым"
+  },
+  "highlightRed": {
+    "message": "Выделить красным"
+  },
+  "highlightOrange": {
+    "message": "Выделить оранжевым"
+  },
+  "goToSettings": {
+    "message": "Перейти к настройкам"
+  },
+  "currentMediaPlayPause": {
+    "message": "Воспроизвести или приостановить текущее аудио или видео"
+  },
+  "increasePlaybackSpeed": {
+    "message": "Увеличить скорость воспроизведения текущего аудио или видео"
+  },
+  "decreasePlaybackSpeed": {
+    "message": "Уменьшить скорость воспроизведения текущего аудио или видео"
+  },
+  "jumpForward": {
+    "message": "Перейти к следующему предложению, абзацу или разделу аудио или видео. Если это невозможно, будет сделан переход на 5 секунд вперёд"
+  },
+  "jumpBackward": {
+    "message": "Перейти к предыдущему предложению, абзацу или разделу аудио или видео. Если это невозможно, будет сделан переход на 5 секунд назад"
+  },
+  "increaseFontSize": {
+    "message": "Увеличить размер шрифта"
+  },
+  "decreaseFontSize": {
+    "message": "Уменьшить размер шрифта"
+  },
+  "removeHighlight": {
+    "message": "Нажмите здесь, чтобы удалить выделение"
+  }
+}
