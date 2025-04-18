@@ -46,26 +46,30 @@ let dialogRight = window.visualViewport.width
 
 const JW_AUDIO_RATE_SELECTORS = {
     '2': 'div.video-js > div:nth-child(9) > ul > li:nth-child(1)',
-    '1.5': 'div.video-js > div:nth-child(9) > ul > li:nth-child(2)',
-    '1.2': 'div.video-js > div:nth-child(9) > ul > li:nth-child(3)',
-    '1.1': 'div.video-js > div:nth-child(9) > ul > li:nth-child(4)',
-    '1': 'div.video-js > div:nth-child(9) > ul > li:nth-child(5)',
-    '0.9': 'div.video-js > div:nth-child(9) > ul > li:nth-child(6)',
-    '0.8': 'div.video-js > div:nth-child(9) > ul > li:nth-child(7)',
-    '0.7': 'div.video-js > div:nth-child(9) > ul > li:nth-child(8)',
-    '0.6': 'div.video-js > div:nth-child(9) > ul > li:nth-child(9)'
+    '1.8': 'div.video-js > div:nth-child(9) > ul > li:nth-child(2)',
+    '1.6': 'div.video-js > div:nth-child(9) > ul > li:nth-child(3)',
+    '1.4': 'div.video-js > div:nth-child(9) > ul > li:nth-child(4)',
+    '1.2': 'div.video-js > div:nth-child(9) > ul > li:nth-child(5)',
+    '1.1': 'div.video-js > div:nth-child(9) > ul > li:nth-child(6)',
+    '1': 'div.video-js > div:nth-child(9) > ul > li:nth-child(7)',
+    '0.9': 'div.video-js > div:nth-child(9) > ul > li:nth-child(8)',
+    '0.8': 'div.video-js > div:nth-child(9) > ul > li:nth-child(9)',
+    '0.7': 'div.video-js > div:nth-child(9) > ul > li:nth-child(10)',
+    '0.6': 'div.video-js > div:nth-child(9) > ul > li:nth-child(11)'
 }
 
 const JW_VIDEO_RATE_SELECTORS = {
     '2': 'div.video-js > div:nth-child(11) > ul > li:nth-child(1)',
-    '1.5': 'div.video-js > div:nth-child(11) > ul > li:nth-child(2)',
-    '1.2': 'div.video-js > div:nth-child(11) > ul > li:nth-child(3)',
-    '1.1': 'div.video-js > div:nth-child(11) > ul > li:nth-child(4)',
-    '1': 'div.video-js > div:nth-child(11) > ul > li:nth-child(5)',
-    '0.9': 'div.video-js > div:nth-child(11) > ul > li:nth-child(6)',
-    '0.8': 'div.video-js > div:nth-child(11) > ul > li:nth-child(7)',
-    '0.7': 'div.video-js > div:nth-child(11) > ul > li:nth-child(8)',
-    '0.6': 'div.video-js > div:nth-child(11) > ul > li:nth-child(9)'
+    '1.8': 'div.video-js > div:nth-child(11) > ul > li:nth-child(2)',
+    '1.6': 'div.video-js > div:nth-child(11) > ul > li:nth-child(3)',
+    '1.4': 'div.video-js > div:nth-child(11) > ul > li:nth-child(4)',
+    '1.2': 'div.video-js > div:nth-child(11) > ul > li:nth-child(5)',
+    '1.1': 'div.video-js > div:nth-child(11) > ul > li:nth-child(6)',
+    '1': 'div.video-js > div:nth-child(11) > ul > li:nth-child(7)',
+    '0.9': 'div.video-js > div:nth-child(11) > ul > li:nth-child(8)',
+    '0.8': 'div.video-js > div:nth-child(11) > ul > li:nth-child(9)',
+    '0.7': 'div.video-js > div:nth-child(11) > ul > li:nth-child(10)',
+    '0.6': 'div.video-js > div:nth-child(11) > ul > li:nth-child(11)'
 }
 
 const MEDIA_TITLE_SELECTORS = ['.mediaItemTitle', 'header > h1', 'article > div > div > h1']
@@ -281,14 +285,14 @@ const refreshTranscriptionContentSize = () => {
         const transcriptionWrapper = document.querySelector('.jw-refined-transcription')
 
         if (transcriptionWrapper) {
-            const transcriptionContainer = document.querySelector('.contentArea') || document.querySelector('#sidebar') || document.querySelector('article')
+            const transcriptionContainer = document.querySelector('.contentArea') || document.querySelector('.sidebar-wrapper') || document.querySelector('#sidebar') || document.querySelector('article')
 
             const transcriptionStyle = {
                 height: 'auto',
                 overflow: 'hidden',
             }
 
-            isTranscriptionInSidebar = transcriptionContainer === document.querySelector('#sidebar') && window.visualViewport.width >= 960
+            isTranscriptionInSidebar = transcriptionContainer === (document.querySelector('.sidebar-wrapper') || document.querySelector('#sidebar')) && window.visualViewport.width >= 960
 
             if (isTranscriptionInSidebar) {
 
@@ -744,7 +748,7 @@ ${text}
 `
 
 
-            const transcriptionContainer = document.querySelector('.contentArea') || document.querySelector('#sidebar') || document.querySelector('article')
+            const transcriptionContainer = document.querySelector('.contentArea') || document.querySelector('.sidebar-wrapper') || document.querySelector('#sidebar') || document.querySelector('article')
 
             transcriptionContainer.innerHTML += `
 <div id="jw-refined-transcription" class="jw-refined-transcription">
@@ -1893,7 +1897,7 @@ const SHORTCUTS = {
             const isAudio = !!audioElement && !!audioElement.src
             const rate = getPlaybackRate(isAudio ? LS_USER_PREF_AUDIO_PLAYBACK_RATE : LS_USER_PREF_VIDEO_PLAYBACK_RATE)
 
-            const availablePlaybackRates = getAvailablePlaybackRates()
+            const availablePlaybackRates = getAvailablePlaybackRates(isAudio)
             const currentRateIndex = availablePlaybackRates.indexOf(rate)
 
             const playbackRate = availablePlaybackRates[Math.min(currentRateIndex + 1, availablePlaybackRates.length - 1)]
@@ -1912,7 +1916,7 @@ const SHORTCUTS = {
             const isAudio = !!audioElement && !!audioElement.src
             const rate = getPlaybackRate(isAudio ? LS_USER_PREF_AUDIO_PLAYBACK_RATE : LS_USER_PREF_VIDEO_PLAYBACK_RATE)
 
-            const availablePlaybackRates = getAvailablePlaybackRates()
+            const availablePlaybackRates = getAvailablePlaybackRates(isAudio)
             const currentRateIndex = availablePlaybackRates.indexOf(rate)
 
             const playbackRate = availablePlaybackRates[Math.max(currentRateIndex - 1, 0)]
@@ -2060,10 +2064,13 @@ const timeNotationToSeconds = (timeNotation) => {
     return Number(hours) * 3600 + Number(minutes) * 60 + Number(seconds) + Number(milliseconds) / 1000
 }
 
-const getAvailablePlaybackRates = () =>
-    isWOL
-        ? [0.6, 0.7, 0.8, 0.9, 1, 1.1, 1.2, 1.5, 2, 3, 4, 5]
-        : [0.6, 0.7, 0.8, 0.9, 1, 1.1, 1.2, 1.5, 2]
+const getAvailablePlaybackRates = (isAudio = false) => {
+    const rates = isWOL
+        ? [...Object.keys(JW_AUDIO_RATE_SELECTORS), 2.5, 3]
+        : Object.keys(isAudio ? JW_AUDIO_RATE_SELECTORS : JW_AUDIO_RATE_SELECTORS)
+
+    return rates.map(Number).sort((a, b) => a - b)
+}
 const waitForAudioAvailable = () => {
     let clearAudioSearchInterval;
     clearAudioSearchInterval = setInterval(async () => {
@@ -2269,7 +2276,7 @@ function setRate(rate, rateHandlerElements, lsKey) {
 const setPlaybackRate = (rate) => {
     if (audioElement) {
         if (isWOL) {
-            const availablePlaybackRates = getAvailablePlaybackRates()
+            const availablePlaybackRates = getAvailablePlaybackRates(true)
             const actualRate = Math.min(Math.max(availablePlaybackRates[0], rate), availablePlaybackRates[availablePlaybackRates.length - 1])
             audioElement.playbackRate = actualRate
             localStorage.setItem(LS_USER_PREF_AUDIO_PLAYBACK_RATE, actualRate.toString())
