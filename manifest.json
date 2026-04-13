@@ -5,20 +5,20 @@
   "manifest_version": 3,
   "default_locale": "en",
   "background": {
-    "service_worker": "./scripts/background.js"
+    "service_worker": "scripts/background.js"
   },
   "permissions": [
     "tabs",
     "contextMenus"
   ],
   "action": {
-    "default_popup": "./popup/popup.html"
+    "default_popup": "popup/popup.html"
   },
   "icons": {
-    "16": "./images/icon-16.png",
-    "32": "./images/icon-32.png",
-    "48": "./images/icon-48.png",
-    "128": "./images/icon-128.png"
+    "16": "images/icon-16.png",
+    "32": "images/icon-32.png",
+    "48": "images/icon-48.png",
+    "128": "images/icon-128.png"
   },
   "content_scripts": [
     {
@@ -27,21 +27,21 @@
       ],
       "run_at": "document_end",
       "js": [
-        "./scripts/i18n.js",
-        "./scripts/underscore-umd-min.js",
-        "./scripts/underscore.string.min.js",
-        "./popup/popup.js",
-        "./scripts/render_shortcuts.js",
-        "./scripts/porter.js",
-        "./scripts/sum.js",
-        "./scripts/vtt.js",
-        "./scripts/download.js",
-        "./scripts/slugify.js",
-        "./scripts/content_script.js"
+        "scripts/i18n.js",
+        "scripts/underscore-umd-min.js",
+        "scripts/underscore.string.min.js",
+        "popup/popup.js",
+        "scripts/render_shortcuts.js",
+        "scripts/porter.js",
+        "scripts/sum.js",
+        "scripts/vtt.js",
+        "scripts/download.js",
+        "scripts/slugify.js",
+        "scripts/content_script.js"
       ],
       "css": [
-        "./styles/shortcuts.css",
-        "./styles/content_script.css"
+        "styles/shortcuts.css",
+        "styles/content_script.css"
       ]
     }
   ],
