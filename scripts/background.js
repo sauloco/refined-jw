@@ -21,6 +21,12 @@ async function onContextMenuClick(info) {
         info
     });
 }
+chrome.runtime.onMessage.addListener(function (request) {
+    if (request.type === 'set_extract_menu_visible') {
+        chrome.contextMenus.update('selection', { visible: request.visible })
+    }
+})
+
 chrome.runtime.onInstalled.addListener(function (tabId) {
     // Create one test item for each context type.
     let contexts = [

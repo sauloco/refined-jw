@@ -229,6 +229,10 @@ const specificWolInits = () => {
             tab.addEventListener('click', () => refreshWindowSize())
         }
     }
+
+    const navigationContents = document.querySelector('.navigationContents')
+    const hasStudyPane = !!(navigationContents && navigationContents.querySelector('.studyPane'))
+    chrome.runtime.sendMessage({ type: 'set_extract_menu_visible', visible: !hasStudyPane })
 }
 
 const specificJwInits = () => {
@@ -1315,6 +1319,7 @@ async function extractWolQuotes(document) {
 
 
     const subheadings = document.querySelector("#subheadings")
+    const navigationContents = document.querySelector('.navigationContents')
     let articleParent = document.querySelector('.jw-refined-article-parent')
 
     if (!subheadings) {
@@ -1332,7 +1337,8 @@ async function extractWolQuotes(document) {
         }
     }
 
-    const target = subheadings || articleParent
+    const target = subheadings || navigationContents || articleParent
+
 
     const selection = window.getSelection()
 
@@ -1384,7 +1390,14 @@ async function extractWolQuotes(document) {
 
         const data = await result.json()
 
+        if (!data) {
+            console.error("data not found", data, link)
+            return;
+        }
+
         const {pinnedQuote, id} = createPinnedQuote(data)
+
+        console.log(pinnedQuote)
 
         target.innerHTML += pinnedQuote
 
@@ -1402,7 +1415,6 @@ async function extractWolQuotes(document) {
         }
     }
 
-
     refreshWindowSize()
 
 }
@@ -1412,7 +1424,8 @@ function refreshWindowSize() {
 }
 
 function closePinnedQuote(evt) {
-    evt.target.closest('.jw-refined-pinned-quotes').remove()
+    const quote = evt.target.closest('.jw-refined-pinned-quotes')
+    quote.remove()
     refreshWindowSize()
 }
 
