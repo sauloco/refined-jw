@@ -181,5 +181,26 @@
   },
   "removeHighlight": {
     "message": "Clica aqui para remover o realce"
+  },
+  "aiStarting": {
+    "message": "Serviço de IA a iniciar…"
+  },
+  "aiReady": {
+    "message": "IA pronta"
+  },
+  "aiUnavailable": {
+    "message": "IA indisponível"
+  },
+  "aiAnswerBtn": {
+    "message": "Resposta"
+  },
+  "aiDownloading": {
+    "message": "IA a transferir…"
+  },
+  "aiAnswerAllBtn": {
+    "message": "Responder todas as perguntas"
+  },
+  "aiAnswerAllDone": {
+    "message": "Concluído"
   }
 }

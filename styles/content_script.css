@@ -728,8 +728,97 @@ to take effect, as the specificity is the same */
     }
 }
 
+/* Reusable gradient-spin animation — not tied to any specific feature */
+@property --gradient-angle {
+    syntax: '<angle>';
+    inherits: false;
+    initial-value: 45deg;
+}
+
+@keyframes spin-gradient {
+    from { --gradient-angle: 45deg; }
+    to   { --gradient-angle: 405deg; }
+}
+
+.jw-refined-button-hint.is-loading .icon > div,
+.jw-refined-button-hint.is-loading .buttonIcon > div {
+    animation: spin-gradient 3s linear infinite !important;
+    background: linear-gradient(var(--gradient-angle), #279CE0 0%, #9F71C6 57%, #DB6A6D 81%, #F39949 100%) !important;
+}
+
+/* AI status banner inside the popup */
+.jw-refined-ai-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    font-size: 0.8rem;
+    opacity: 1;
+    transition: opacity 1s ease;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    margin-bottom: 4px;
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.jw-refined-ai-status.jw-refined-ai-status--ready {
+    color: #4ab6fe;
+}
+
+.jw-refined-ai-status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    background: conic-gradient(#279CE0, #9F71C6, #DB6A6D, #F39949, #279CE0);
+}
+
+.jw-refined-ai-status--loading .jw-refined-ai-status-dot {
+    animation: spin-gradient 1.5s linear infinite;
+    background: conic-gradient(from var(--gradient-angle), #279CE0, #9F71C6, #DB6A6D, #F39949, #279CE0);
+}
+
+.jw-refined-ai-status--ready .jw-refined-ai-status-dot {
+    background: #4ab6fe;
+}
+
 #download-vtt {
     width: max-content;
+}
+
+/* AI Answer all button — shown after reading time */
+.jw-refined-ai-answer-all-btn {
+    display: inline-flex;
+    cursor: pointer;
+    pointer-events: auto;
+    margin-inline-start: 0.75em;
+    vertical-align: middle;
+
+    &.is-loading {
+        animation: spin-gradient 1.5s linear infinite;
+        pointer-events: none;
+    }
+}
+
+/* AI Answer button — shown on question hover/focus only */
+.jw-refined-ai-answer-btn {
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.15s ease;
+    cursor: pointer;
+    margin-inline-start: 0.5em;
+    vertical-align: middle;
+
+    &.is-loading {
+        opacity: 1;
+        pointer-events: none;
+        animation: spin-gradient 1.5s linear infinite;
+    }
+}
+
+p.qu:hover .jw-refined-ai-answer-btn,
+p.qu:focus-within .jw-refined-ai-answer-btn {
+    opacity: 1;
+    pointer-events: auto;
 }
 
 .with-action {

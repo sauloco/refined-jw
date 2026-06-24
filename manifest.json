@@ -37,6 +37,7 @@
         "scripts/vtt.js",
         "scripts/download.js",
         "scripts/slugify.js",
+        "scripts/ai_service.js",
         "scripts/content_script.js"
       ],
       "css": [

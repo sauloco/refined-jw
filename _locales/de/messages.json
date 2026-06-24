@@ -181,5 +181,26 @@
   },
   "removeHighlight": {
     "message": "Klicke hier, um die Hervorhebung zu entfernen"
+  },
+  "aiStarting": {
+    "message": "KI-Dienst startet…"
+  },
+  "aiReady": {
+    "message": "KI bereit"
+  },
+  "aiUnavailable": {
+    "message": "KI nicht verfügbar"
+  },
+  "aiAnswerBtn": {
+    "message": "Antwort"
+  },
+  "aiDownloading": {
+    "message": "KI wird heruntergeladen…"
+  },
+  "aiAnswerAllBtn": {
+    "message": "Alle Fragen beantworten"
+  },
+  "aiAnswerAllDone": {
+    "message": "Fertig"
   }
 }

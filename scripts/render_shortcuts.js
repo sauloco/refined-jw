@@ -43,8 +43,6 @@ const renderShortcuts = (shortcuts, withAction = false, targetSelector = '.short
 
     firstRow.innerHTML += firstRowDescription
 
-    target.innerHTML += `<blockquote class="jw-refined-blockquote cell note">${getLocale('highlightNote')}</blockquote>`
-
     for (const [eventKey, shortcut] of Object.entries(shortcuts)) {
         const {keys, className, description, inRow, action, condition} = shortcut
 

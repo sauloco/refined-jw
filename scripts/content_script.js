@@ -5,11 +5,11 @@
 * */
 
 const FEATURE_FLAGS = {
-    useDiscord: true,
+    useDiscord: false,
     useGoogleAnalytics: false
 }
 
-const DEBUG = false
+const DEBUG = true
 
 const debug = (...args) => {
     return {
@@ -59,17 +59,17 @@ const JW_AUDIO_RATE_SELECTORS = {
 }
 
 const JW_VIDEO_RATE_SELECTORS = {
-    '2': 'div.video-js > div:nth-child(11) > ul > li:nth-child(1)',
-    '1.8': 'div.video-js > div:nth-child(11) > ul > li:nth-child(2)',
-    '1.6': 'div.video-js > div:nth-child(11) > ul > li:nth-child(3)',
-    '1.4': 'div.video-js > div:nth-child(11) > ul > li:nth-child(4)',
-    '1.2': 'div.video-js > div:nth-child(11) > ul > li:nth-child(5)',
-    '1.1': 'div.video-js > div:nth-child(11) > ul > li:nth-child(6)',
-    '1': 'div.video-js > div:nth-child(11) > ul > li:nth-child(7)',
-    '0.9': 'div.video-js > div:nth-child(11) > ul > li:nth-child(8)',
-    '0.8': 'div.video-js > div:nth-child(11) > ul > li:nth-child(9)',
-    '0.7': 'div.video-js > div:nth-child(11) > ul > li:nth-child(10)',
-    '0.6': 'div.video-js > div:nth-child(11) > ul > li:nth-child(11)'
+    '2': 'div.video-js > div:nth-child(10) > ul > li:nth-child(1)',
+    '1.8': 'div.video-js > div:nth-child(10) > ul > li:nth-child(2)',
+    '1.6': 'div.video-js > div:nth-child(10) > ul > li:nth-child(3)',
+    '1.4': 'div.video-js > div:nth-child(10) > ul > li:nth-child(4)',
+    '1.2': 'div.video-js > div:nth-child(10) > ul > li:nth-child(5)',
+    '1.1': 'div.video-js > div:nth-child(10) > ul > li:nth-child(6)',
+    '1': 'div.video-js > div:nth-child(10) > ul > li:nth-child(7)',
+    '0.9': 'div.video-js > div:nth-child(10) > ul > li:nth-child(8)',
+    '0.8': 'div.video-js > div:nth-child(10) > ul > li:nth-child(9)',
+    '0.7': 'div.video-js > div:nth-child(10) > ul > li:nth-child(10)',
+    '0.6': 'div.video-js > div:nth-child(10) > ul > li:nth-child(11)'
 }
 
 const MEDIA_TITLE_SELECTORS = ['.mediaItemTitle', 'header > h1', 'article > div > div > h1']
@@ -210,6 +210,7 @@ const initJWRefined = () => {
     addHints()
     displayButtonHint()
     displayReadingTime()
+    initAIStatus()
 
     if (isWOL) {
         specificWolInits()
@@ -233,6 +234,163 @@ const specificWolInits = () => {
     const navigationContents = document.querySelector('.navigationContents')
     const hasStudyPane = !!(navigationContents && navigationContents.querySelector('.studyPane'))
     chrome.runtime.sendMessage({ type: 'set_extract_menu_visible', visible: !hasStudyPane })
+
+    initAIAnswerHighlights()
+    initAIAnswerAllBtn()
+}
+
+// ---------------------------------------------------------------------------
+// AI Answer Highlight
+// ---------------------------------------------------------------------------
+
+/**
+ * Find `searchText` inside `element`, select it programmatically, then
+ * delegate to the existing highlightWithColor() so the span and localStorage
+ * entry are created exactly as with a manual highlight.
+ */
+// Strip trailing Bible references like "(1 Ped. 1:6)" or "(Gen. 1:1; Rom. 3:2)"
+const stripBibleRefs = (text) =>
+    text.replace(/\s*\([^)]*\d+[:.]\d+[^)]*\)\s*\.?$/, '').replace(/\s*\.\s*$/, '').trim()
+
+// Normalize text for fuzzy matching: collapse whitespace, strip diacritics, lowercase
+const normalizeText = (text) =>
+    text.normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/\s+/g, ' ').toLowerCase().trim()
+
+const findAndHighlightText = (element, searchText, color) => {
+    const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT)
+    const nodes = []
+    let fullText = ''
+    let node
+    while ((node = walker.nextNode())) {
+        nodes.push({ node, start: fullText.length, end: fullText.length + node.textContent.length })
+        fullText += node.textContent
+    }
+
+    // Try exact match first, then without trailing Bible refs, then normalized
+    const candidates = [
+        searchText,
+        stripBibleRefs(searchText),
+    ].filter((s, i, arr) => s && arr.indexOf(s) === i)  // dedupe
+
+    for (const candidate of candidates) {
+        let idx = fullText.indexOf(candidate)
+
+        // Normalized fallback: find candidate in lowercased/diacritic-stripped text
+        if (idx === -1) {
+            const normFull = normalizeText(fullText)
+            const normCandidate = normalizeText(candidate)
+            const normIdx = normFull.indexOf(normCandidate)
+            if (normIdx !== -1) idx = normIdx  // position is approximate but usable for short phrases
+        }
+
+        if (idx === -1) continue
+
+        const endIdx = idx + candidate.length
+        const startEntry = nodes.find(n => n.start <= idx && n.end > idx)
+        const endEntry = nodes.find(n => n.start < endIdx && n.end >= endIdx)
+        if (!startEntry || !endEntry) continue
+
+        const range = document.createRange()
+        range.setStart(startEntry.node, idx - startEntry.start)
+        range.setEnd(endEntry.node, endIdx - endEntry.start)
+
+        const sel = window.getSelection()
+        sel.removeAllRanges()
+        sel.addRange(range)
+
+        highlightWithColor(document, color)
+        return true
+    }
+
+    console.warn('[RefinedJW AI] findAndHighlightText: no match found for:', searchText)
+    return false
+}
+
+const aiHighlightAnswer = async (quEl, btn) => {
+    // Exclude the button's own text from the question string
+    const clone = quEl.cloneNode(true)
+    clone.querySelector('.jw-refined-ai-answer-btn')?.remove()
+    const question = clone.textContent.trim()
+    console.log('[RefinedJW AI] aiHighlightAnswer start', { question })
+
+    // Collect the answer paragraph(s) — plain <p> siblings after the div.gen-field
+    const answerParagraphs = []
+    let sibling = quEl.nextElementSibling
+    // skip the gen-field (textarea container)
+    if (sibling?.classList.contains('gen-field')) sibling = sibling.nextElementSibling
+    while (sibling && !sibling.classList.contains('qu')) {
+        if (sibling.tagName === 'P') answerParagraphs.push(sibling)
+        sibling = sibling.nextElementSibling
+    }
+
+    console.log('[RefinedJW AI] answer paragraphs found:', answerParagraphs.length)
+    if (answerParagraphs.length === 0) {
+        console.warn('[RefinedJW AI] no answer paragraphs — aborting')
+        return
+    }
+
+    if (btn) {
+        btn.classList.add('is-loading')
+        btn.textContent = '…'
+    }
+
+    try {
+        console.log('[RefinedJW AI] checking AI availability...')
+        const avail = await RefinedJWAI.checkAvailability()
+        console.log('[RefinedJW AI] availability:', avail)
+
+        if (avail === 'unavailable') {
+            if (btn) {
+                btn.textContent = getLocale('aiUnavailable')
+                setTimeout(() => { btn.textContent = getLocale('aiAnswerBtn') }, 3000)
+            }
+            return
+        }
+
+        for (const p of answerParagraphs) {
+            const paragraphText = p.textContent.trim()
+            console.log('[RefinedJW AI] calling findAnswer, paragraph length:', paragraphText.length)
+
+            const onProgress = (pct) => { if (btn) btn.textContent = `${pct}%` }
+            const answerTexts = await RefinedJWAI.findAnswer(question, paragraphText, onProgress)
+            console.log('[RefinedJW AI] findAnswer result:', answerTexts)
+
+            if (!answerTexts) {
+                console.warn('[RefinedJW AI] findAnswer returned null/empty')
+                continue
+            }
+
+            for (const answerText of answerTexts) {
+                const highlighted = findAndHighlightText(p, answerText, 'yellow')
+                console.log('[RefinedJW AI] findAndHighlightText result:', highlighted, 'for:', answerText)
+            }
+        }
+    } catch (err) {
+        console.error('[RefinedJW AI] aiHighlightAnswer error:', err)
+    } finally {
+        console.log('[RefinedJW AI] aiHighlightAnswer done, restoring button')
+        if (btn) {
+            btn.classList.remove('is-loading')
+            btn.textContent = getLocale('aiAnswerBtn')
+        }
+    }
+}
+
+const initAIAnswerHighlights = () => {
+    document.querySelectorAll('p.qu').forEach(quEl => {
+        if (quEl.querySelector('.jw-refined-ai-answer-btn')) return  // already added
+
+        const btn = document.createElement('span')
+        btn.className = 'badge jw-refined-ai-answer-btn'
+        btn.textContent = getLocale('aiAnswerBtn')
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation()
+            if (btn.classList.contains('is-loading')) return
+            aiHighlightAnswer(quEl, btn)
+        })
+
+        quEl.appendChild(btn)
+    })
 }
 
 const specificJwInits = () => {
@@ -415,6 +573,67 @@ const displayReadingTime = () => {
     articleHeader.appendChild(readingTimeEL)
 }
 
+const initAIAnswerAllBtn = () => {
+    const questions = [...document.querySelectorAll('p.qu')]
+    if (questions.length === 0) return
+    if (document.querySelector('#jw-refined-ai-answer-all')) return
+
+    const readingTimeEl = document.querySelector('.jw-refined-reading-time')
+    if (!readingTimeEl) return
+
+    const btn = document.createElement('span')
+    btn.id = 'jw-refined-ai-answer-all'
+    btn.className = 'badge jw-refined-ai-answer-all-btn'
+    btn.textContent = getLocale('aiAnswerAllBtn')
+
+    readingTimeEl.appendChild(btn)
+
+    btn.addEventListener('click', async () => {
+        if (btn.classList.contains('is-loading')) return
+        console.log('[RefinedJW AI] answer-all clicked, questions:', questions.length)
+
+        btn.classList.add('is-loading')
+
+        for (let i = 0; i < questions.length; i++) {
+            const quEl = questions[i]
+            const perBtn = quEl.querySelector('.jw-refined-ai-answer-btn')
+
+            btn.textContent = `${i + 1}/${questions.length}`
+            await aiHighlightAnswer(quEl, perBtn)
+        }
+
+        btn.classList.remove('is-loading')
+        btn.textContent = getLocale('aiAnswerAllDone')
+        setTimeout(() => { btn.textContent = getLocale('aiAnswerAllBtn') }, 3000)
+    })
+
+    if (DEBUG) {
+        const deleteAllBtn = document.createElement('span')
+        deleteAllBtn.id = 'jw-refined-dev-delete-highlights'
+        deleteAllBtn.className = 'badge jw-refined-ai-answer-all-btn'
+        deleteAllBtn.textContent = 'DEV: Delete all highlights'
+        readingTimeEl.appendChild(deleteAllBtn)
+
+        deleteAllBtn.addEventListener('click', () => {
+            const grouped = new Set()
+            document.querySelectorAll('.highlighted').forEach(el => {
+                const id = el.dataset.groupId || el.id
+                if (id) grouped.add(id)
+            })
+            grouped.forEach(groupId => {
+                const selector = `[data-group-id="${groupId}"]`
+                document.querySelectorAll(selector).forEach(span => {
+                    const parent = span.parentNode
+                    while (span.firstChild) parent.insertBefore(span.firstChild, span)
+                    parent.removeChild(span)
+                    parent.normalize()
+                })
+                updateSelectionsInLocalStorage(groupId)
+            })
+        })
+    }
+}
+
 const openHintFrame = (holdingShift) => {
     HINT_FRAME.classList.add('open')
     usageTracking(holdingShift ? 'open_hint_shift' : 'open_hint')
@@ -496,6 +715,48 @@ const displayButtonHint = () => {
         })
     }
 }
+
+const initAIStatus = async () => {
+    const btn = document.querySelector('#jw-refined-button-hint')
+    if (btn) btn.classList.add('is-loading')
+
+    const wrapper = document.querySelector('#jw-refined-hint-wrapper')
+    if (wrapper && !document.querySelector('#jw-refined-ai-status')) {
+        const banner = document.createElement('div')
+        banner.id = 'jw-refined-ai-status'
+        banner.classList.add('jw-refined-ai-status', 'jw-refined-ai-status--loading')
+        banner.innerHTML = `<span class="jw-refined-ai-status-dot"></span>${getLocale('aiStarting')}`
+        wrapper.prepend(banner)
+    }
+
+    let avail = await RefinedJWAI.checkAvailability()
+
+    // 'downloading' from availability() can be a stuck/stale state even when the model
+    // is physically ready — treat it the same as 'readily' and let create() decide.
+    if (avail !== 'readily' && avail !== 'unavailable') {
+        console.log('[RefinedJW AI] availability returned:', avail, '— treating as ready, create() will fail if model is not usable')
+        avail = 'readily'
+    }
+
+    if (btn) btn.classList.remove('is-loading')
+
+    const banner = document.querySelector('#jw-refined-ai-status')
+    if (!banner) return
+
+    if (avail === 'unavailable') {
+        banner.remove()
+        return
+    }
+
+    banner.classList.remove('jw-refined-ai-status--loading')
+    banner.classList.add('jw-refined-ai-status--ready')
+    banner.innerHTML = `<span class="jw-refined-ai-status-dot"></span>${getLocale('aiReady')}`
+    setTimeout(() => {
+        banner.style.opacity = '0'
+        setTimeout(() => banner.remove(), 1000)
+    }, 3000)
+}
+
 let mediaDuration = 0
 let seenShown = false
 
@@ -885,20 +1146,23 @@ const loadComments = () => {
 }
 
 const loadSelections = () => {
-
     const selections = getFromLocalStorage('selection')
 
     if (selections) {
         for (const selection of selections) {
-            document.querySelector(selection.startElementSelector).innerHTML = selection.startElementInnerHTML
+            if (selection.elements) {
+                for (const { selector, innerHTML } of selection.elements) {
+                    const el = document.querySelector(selector)
+                    if (el) el.innerHTML = innerHTML
+                }
+            } else if (selection.startElementSelector) {
+                const el = document.querySelector(selection.startElementSelector)
+                if (el) el.innerHTML = selection.startElementInnerHTML
+            }
         }
     }
 
-    const selectionElements = document.querySelectorAll('.highlighted')
-
-    for (const selection of selectionElements) {
-        selection.addEventListener('click', deleteSelection)
-    }
+    document.querySelectorAll('.highlighted').forEach(el => el.addEventListener('click', deleteSelection))
 }
 
 const startShortcuts = () => {
@@ -1529,10 +1793,7 @@ function createPinnedQuote(data) {
 }
 
 function highlightWithColor(document, color) {
-
-
     const selection = document.getSelection()
-
     const selectionData = highlightSelection(selection, color)
 
     if (!selectionData) {
@@ -1540,54 +1801,47 @@ function highlightWithColor(document, color) {
         return false
     }
 
-    const {selection: validSelection, id} = selectionData
-
-    const {
-        startContainer,
-        endContainer,
-        startOffset,
-        endOffset
-    } = validSelection.getRangeAt(0)
-
+    const { selection: validSelection, id: groupId } = selectionData
     validSelection.removeAllRanges()
 
+    const spans = Array.from(document.querySelectorAll(`[data-group-id="${groupId}"]`))
+    if (spans.length === 0) return false
 
-    const range = document.createRange();
-    range.setStart(startContainer, startOffset)
-    range.setEnd(endContainer, endOffset)
+    const firstAncestor = spans[0].parentElement.closest('[id]')
+    const firstAncestorClassList = firstAncestor ? firstAncestor.classList : spans[0].parentElement.classList
 
-    const startElementInnerHTML = !startContainer.id ? startContainer.parentElement.innerHTML : startContainer.innerHTML
-    const endElementInnerHTML = !endContainer.id ? endContainer.parentElement.innerHTML : endContainer.innerHTML
-    const startElementSelector = startContainer.id ? `${startContainer.tagName.toLowerCase()}#${startContainer.id}` : `${startContainer.parentElement.tagName.toLowerCase()}#${startContainer.parentElement.id}`
-    const endElementSelector = endContainer.id ? `${endContainer.tagName.toLowerCase()}#${endContainer.id}` : `${endContainer.parentElement.tagName.toLowerCase()}#${endContainer.parentElement.id}`
-
-    const startElementClassList = document.querySelector(startElementSelector).classList
     if (
-        startElementClassList.contains('jw-refined-transcription-text') || startElementClassList.contains('jw-refined-transcription-title') || startElementClassList.contains('jw-refined-transcription')
+        firstAncestorClassList.contains('jw-refined-transcription-text') ||
+        firstAncestorClassList.contains('jw-refined-transcription-title') ||
+        firstAncestorClassList.contains('jw-refined-transcription')
     ) {
-        displayPopover('.jw-refined-transcription-title > h2', getLocale('popoverSelectionInTranscriptionLost'));
+        displayPopover('.jw-refined-transcription-title > h2', getLocale('popoverSelectionInTranscriptionLost'))
     } else {
         const homeLink = document.querySelector('#menuHome > a') || document.querySelector('#siteLogo')
-        const isHomePage = window.location.href === homeLink.href
+        const isHomePage = !!homeLink && window.location.href === homeLink.href
 
         if (isHomePage) {
-            const highlightLink = document.querySelector('.bodyTxt .pGroup a:last-child')
+            const highlightLink = document.querySelector('.bodyTxt a:last-child')
             displayPopover(
                 '#dailyText > div.articlePositioner > div.tabContent.active > a',
                 getLocale('popoverSelectionInHomePageLost', highlightLink.href, highlightLink.textContent)
-            );
+            )
         } else {
-            addToLocalStorage('selection', {
-                color,
-                startElementSelector,
-                startElementInnerHTML,
-                endElementSelector,
-                endElementInnerHTML,
-                id
+            const seen = new Set()
+            const elements = []
+            spans.forEach(span => {
+                const ancestor = span.parentElement.closest('[id]')
+                if (ancestor && !seen.has(ancestor)) {
+                    seen.add(ancestor)
+                    elements.push({
+                        selector: `${ancestor.tagName.toLowerCase()}#${ancestor.id}`,
+                        innerHTML: ancestor.innerHTML
+                    })
+                }
             })
+            addToLocalStorage('selection', { color, id: groupId, elements })
         }
     }
-
 
     return false
 }
@@ -2313,46 +2567,65 @@ const blurSearchField = () => {
     }, 100)
 }
 const deleteSelection = (evt) => {
-    const el = evt.target
-    const outerHTML = el.outerHTML
-    const innerHTML = el.innerHTML
-    if (el) {
-        const parent = el.parentElement;
-        parent.innerHTML = el.parentElement.innerHTML.replace(outerHTML, innerHTML)
-        updateSelectionsInLocalStorage(el.id, parent.innerHTML)
-        parent.querySelectorAll('.highlighted').forEach(el => el.addEventListener('click', deleteSelection))
-        return true;
+    const el = evt.target.closest('.highlighted') || evt.target
+    const groupId = el.dataset.groupId || el.id
+    if (!groupId) return false
+
+    const selector = el.dataset.groupId
+        ? `[data-group-id="${el.dataset.groupId}"]`
+        : `#${el.id}`
+
+    Array.from(document.querySelectorAll(selector)).forEach(span => {
+        const parent = span.parentNode
+        while (span.firstChild) parent.insertBefore(span.firstChild, span)
+        parent.removeChild(span)
+        parent.normalize()
+    })
+
+    updateSelectionsInLocalStorage(groupId)
+    return true
+}
+
+function getTextNodesInRange(range) {
+    const root = range.commonAncestorContainer
+    const treeRoot = root.nodeType === Node.TEXT_NODE ? root.parentNode : root
+    const walker = (treeRoot.ownerDocument || document).createTreeWalker(treeRoot, NodeFilter.SHOW_TEXT, null)
+    const result = []
+    let node
+    while ((node = walker.nextNode())) {
+        if (!range.intersectsNode(node)) continue
+        const start = node === range.startContainer ? range.startOffset : 0
+        const end = node === range.endContainer ? range.endOffset : node.length
+        if (start < end) result.push({ node, start, end })
     }
-    return false;
+    return result
 }
 
 const highlightSelection = (selection, color) => {
+    if (!selection || selection.rangeCount === 0) return null
+    const range = selection.getRangeAt(0)
+    if (range.collapsed) return null
 
-    const surroundElement = document.createElement('span')
-    surroundElement.id = `highlighted-${Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15)}`
-    surroundElement.title = getLocale("removeHighlight")
-    if (color) {
-        surroundElement.classList.add(`highlighted`, `refined-jw-${color}-bg`)
-    }
+    const groupId = `highlighted-${Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15)}`
+    const textNodes = getTextNodesInRange(range)
+    if (textNodes.length === 0) return null
 
+    textNodes.forEach(({ node, start, end }, i) => {
+        let target = node
+        if (end < node.length) node.splitText(end)
+        if (start > 0) target = node.splitText(start)
 
-    let validSelection = false
-    let tries = 0
-    do {
-        tries++
-        try {
-            selection.getRangeAt(0).surroundContents(surroundElement)
-            validSelection = true
-        } catch (e) {
-            validSelection = false
-            selection.modify("extend", "forward", "word")
-        }
-    } while (!validSelection && tries < 1000)
+        const span = document.createElement('span')
+        span.id = `${groupId}-${i}`
+        span.dataset.groupId = groupId
+        span.title = getLocale("removeHighlight")
+        if (color) span.classList.add('highlighted', `refined-jw-${color}-bg`)
+        target.parentNode.insertBefore(span, target)
+        span.appendChild(target)
+        span.addEventListener('click', deleteSelection)
+    })
 
-    surroundElement.addEventListener('click', deleteSelection)
-
-    return validSelection ? {selection, id: surroundElement.id} : null
-
+    return { selection, id: groupId }
 }
 
 
@@ -2369,22 +2642,30 @@ const LS_CURRENT_SHORTCUT = 'currentShortcut';
 
 const LOCAL_STORAGE_KEY = 'REFINED-JW-USER-DATA'
 
-const updateSelectionsInLocalStorage = (id, html, uri = window.location.href) => {
-
+const updateSelectionsInLocalStorage = (id, uri = window.location.href) => {
     const userData = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY) || "{}")
-
     const key = uriToKey(uri)
     const currentData = userData[key] || {}
-
     const allSelections = currentData.selection || []
 
     const remainingSelections = allSelections.filter(s => s.id !== id)
 
+    // Refresh stored HTML for remaining selections from the live DOM so stale
+    // markup from the deleted spans doesn't persist in other selections that
+    // share the same parent element.
     for (const selection of remainingSelections) {
-        if (selection.startElementInnerHTML.includes(id)) {
-            selection.startElementInnerHTML = html
-        } else if (selection.endElementInnerHTML.includes(id)) {
-            selection.endElementInnerHTML = html
+        if (selection.elements) {
+            selection.elements = selection.elements.map(({ selector, innerHTML }) => {
+                const el = document.querySelector(selector)
+                return { selector, innerHTML: el ? el.innerHTML : innerHTML }
+            })
+        } else if (selection.startElementSelector) {
+            const el = document.querySelector(selection.startElementSelector)
+            if (el) selection.startElementInnerHTML = el.innerHTML
+            if (selection.endElementSelector) {
+                const endEl = document.querySelector(selection.endElementSelector)
+                if (endEl) selection.endElementInnerHTML = endEl.innerHTML
+            }
         }
     }
 

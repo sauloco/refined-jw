@@ -181,5 +181,26 @@
   },
   "removeHighlight": {
     "message": "Нажмите здесь, чтобы удалить выделение"
+  },
+  "aiStarting": {
+    "message": "Служба ИИ запускается…"
+  },
+  "aiReady": {
+    "message": "ИИ готов"
+  },
+  "aiUnavailable": {
+    "message": "ИИ недоступен"
+  },
+  "aiAnswerBtn": {
+    "message": "Ответ"
+  },
+  "aiDownloading": {
+    "message": "ИИ загружается…"
+  },
+  "aiAnswerAllBtn": {
+    "message": "Ответить на все вопросы"
+  },
+  "aiAnswerAllDone": {
+    "message": "Готово"
   }
 }

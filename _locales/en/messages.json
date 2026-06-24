@@ -181,5 +181,26 @@
   },
   "removeHighlight": {
     "message": "Click to delete selection"
+  },
+  "aiStarting": {
+    "message": "AI service is starting…"
+  },
+  "aiReady": {
+    "message": "AI ready"
+  },
+  "aiUnavailable": {
+    "message": "AI unavailable"
+  },
+  "aiAnswerBtn": {
+    "message": "Answer"
+  },
+  "aiDownloading": {
+    "message": "AI downloading…"
+  },
+  "aiAnswerAllBtn": {
+    "message": "Answer all questions"
+  },
+  "aiAnswerAllDone": {
+    "message": "Done"
   }
 }

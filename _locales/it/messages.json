@@ -181,5 +181,26 @@
   },
   "removeHighlight": {
     "message": "Fai clic qui per rimuovere l'evidenziazione"
+  },
+  "aiStarting": {
+    "message": "Il servizio IA si sta avviando…"
+  },
+  "aiReady": {
+    "message": "IA pronta"
+  },
+  "aiUnavailable": {
+    "message": "IA non disponibile"
+  },
+  "aiAnswerBtn": {
+    "message": "Risposta"
+  },
+  "aiDownloading": {
+    "message": "IA in download…"
+  },
+  "aiAnswerAllBtn": {
+    "message": "Rispondi a tutte le domande"
+  },
+  "aiAnswerAllDone": {
+    "message": "Fatto"
   }
 }
