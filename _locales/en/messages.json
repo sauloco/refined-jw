@@ -63,7 +63,7 @@
     "message": "Download as subtitles"
   },
   "start": {
-    "message": "Start"
+    "message": "REHEARSE"
   },
   "startStopwatch": {
     "message": "Start Stopwatch"
@@ -202,5 +202,32 @@
   },
   "aiAnswerAllDone": {
     "message": "Done"
+  },
+  "aiComment": {
+    "message": "Comment"
+  },
+  "aiReplace": {
+    "message": "Accept"
+  },
+  "aiDismiss": {
+    "message": "Dismiss"
+  },
+  "aiRegenerate": {
+    "message": "Re-generate"
+  },
+  "aiRegeneratePromptPlaceholder": {
+    "message": "What should it do differently? (optional)"
+  },
+  "aiSetupTitle": {
+    "message": "Enable On-Device AI"
+  },
+  "aiSetupDesc": {
+    "message": "Refined JW uses Gemini Nano, Chrome's built-in AI, for study notes, answers, and summaries. A one-time setup in Chrome is needed."
+  },
+  "aiSetupDismiss": {
+    "message": "Not now"
+  },
+  "aiSetupDontShow": {
+    "message": "Don't show again"
   }
 }

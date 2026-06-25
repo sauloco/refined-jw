@@ -58,3 +58,4 @@ dist
 .yarn/install-state.gz
 .pnp.*
 /CLAUDE.local.md
+/CLAUDE.md

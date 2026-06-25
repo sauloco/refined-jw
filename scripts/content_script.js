@@ -6,6 +6,7 @@
 
 const FEATURE_FLAGS = {
     useDiscord: false,
+    usePosthog: true,
     useGoogleAnalytics: false
 }
 
@@ -33,6 +34,7 @@ const conditionalDebugger = (condition) => {
 
 const WOL_BASE_URL = 'https://wol.jw.org'
 const JW_BASE_URL = 'https://www.jw.org'
+const AI_SETUP_DISMISSED_KEY = 'REFINED-JW-AI-SETUP-DISMISSED'
 
 const isWOL = window.location.href.includes(WOL_BASE_URL)
 const isJW = window.location.href.includes(JW_BASE_URL)
@@ -122,67 +124,38 @@ let audioPlayer;
 
 let videoElement;
 
-const usageTracking = async (action, details = {}, forceNewThread = false) => {
+const posthog = {
+    capture(event, properties = {}) {
+        if (TRACKING_DISABLED) return
 
-    const sharedDetails = {
-        action,
-        ...details,
-        user_id: USER_ID,
-        is_recurrent_user: isRecurrentUser,
-        location: isWOL ? 'wol' : 'jw',
-        appVersion: APP_VERSION,
-        geolocation: navigator.geolocation ? JSON.stringify(navigator.geolocation, null, 2) : null,
-        screen: {
-            width: screen.width,
-            height: screen.height
-        },
-        userAgent: navigator.userAgent,
-        language: navigator.language,
-        languages: navigator.languages,
-        platform: navigator.platform,
-        maxTouchPoints: navigator.maxTouchPoints,
-        timestamp: new Date().toISOString(),
-    }
-
-    const threadId = forceNewThread ? null : localStorage.getItem('REFINED-JW-THREAD-ID')
-
-    if (TRACKING_DISABLED) {
-        console.info('tracking disabled:', threadId)
-        console.info(sharedDetails)
-        return
-    }
-
-    if (FEATURE_FLAGS.useDiscord) {
-
-        const response = await fetch(
-            `https://discord.com/api/webhooks/1265755905304301611/lwpH8Q1LMiry1Gsj6UYbJuU72FnkwU7Ojo5SZDF6nMAu4aDkP7WBD-wyQUTe5qCgd_29?wait=true${threadId ? `&thread_id=${threadId}` : ''}`,
-            {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    ...(threadId ? {} : {thread_name: `${forceNewThread ? '🔴 Existent user' : '🟢 New user'} ${USER_ID}`}),
-                    content: "```json\n" + JSON.stringify(sharedDetails, null, 2) + "\n```"
-                })
+        const payload = {
+            api_key: 'phc_m3xz2mBkFj4PphDYgEhBgvcBJp8ewgHzvR6cepeZMEhU',
+            event,
+            distinct_id: USER_ID,
+            properties: {
+                ...properties,
+                is_recurrent_user: isRecurrentUser,
+                location: isWOL ? 'wol' : 'jw',
+                app_version: APP_VERSION,
+                screen_width: screen.width,
+                screen_height: screen.height,
+                user_agent: navigator.userAgent,
+                language: navigator.language,
             }
-        )
-
-        if (action === 'new_user' || forceNewThread) {
-            const data = await response.json()
-            localStorage.setItem('REFINED-JW-THREAD-ID', data.id)
-        } else if (response.status !== 200) {
-            usageTracking(action, details, true)
         }
-    }
 
-    if (FEATURE_FLAGS.useGoogleAnalytics) {
-        // TODO: add google analytics
+        if (FEATURE_FLAGS.usePosthog) {
+            fetch('https://us.i.posthog.com/capture/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            })
+        }
     }
 }
 
 if (!isRecurrentUser) {
-    usageTracking('new_user', {user_id: USER_ID})
+    posthog.capture('new_user', { user_id: USER_ID })
 }
 
 const initJWRefined = () => {
@@ -306,6 +279,78 @@ const findAndHighlightText = (element, searchText, color) => {
     return false
 }
 
+const showAISetupDialog = () => {
+    if (localStorage.getItem(AI_SETUP_DISMISSED_KEY) === 'true') return
+    if (document.querySelector('.jw-refined-ai-setup-overlay')) return
+
+    const overlay = document.createElement('div')
+    overlay.className = 'jw-refined-ai-setup-overlay'
+
+    const dialog = document.createElement('div')
+    dialog.className = 'jw-refined-ai-setup-dialog'
+
+    const title = document.createElement('p')
+    title.className = 'jw-refined-ai-setup-title'
+    title.textContent = getLocale('aiSetupTitle')
+
+    const desc = document.createElement('p')
+    desc.className = 'jw-refined-ai-setup-desc'
+    desc.textContent = getLocale('aiSetupDesc')
+
+    const steps = document.createElement('ol')
+    steps.className = 'jw-refined-ai-setup-steps'
+
+    const stepData = [
+        ['Make sure you have Chrome 131 or later.'],
+        ['Open a new tab and go to ', 'chrome://flags/#prompt-api-for-gemini-nano', ' — set it to ', 'Enabled', '.'],
+        ['On the same page, find ', 'chrome://flags/#optimization-guide-on-device-model', ' — set it to ', 'Enabled BypassPerfRequirement', '.'],
+        ['Click ', 'Relaunch', ' to restart Chrome.'],
+        ['Go to ', 'chrome://components', ' → find ', 'Optimization Guide On Device Model', ' → click ', 'Check for update', '.'],
+        ['Wait a few minutes for the model to download, then try again.'],
+    ]
+
+    stepData.forEach(parts => {
+        const li = document.createElement('li')
+        parts.forEach((part, i) => {
+            if (i % 2 === 1) {
+                const code = document.createElement('code')
+                code.textContent = part
+                li.appendChild(code)
+            } else {
+                li.appendChild(document.createTextNode(part))
+            }
+        })
+        steps.appendChild(li)
+    })
+
+    const actions = document.createElement('div')
+    actions.className = 'jw-refined-ai-setup-actions'
+
+    const dontShowBtn = document.createElement('button')
+    dontShowBtn.textContent = getLocale('aiSetupDontShow')
+    dontShowBtn.addEventListener('click', () => {
+        localStorage.setItem(AI_SETUP_DISMISSED_KEY, 'true')
+        overlay.remove()
+    })
+
+    const dismissBtn = document.createElement('button')
+    dismissBtn.className = 'jw-refined-ai-setup-btn-primary'
+    dismissBtn.textContent = getLocale('aiSetupDismiss')
+    dismissBtn.addEventListener('click', () => overlay.remove())
+
+    actions.appendChild(dontShowBtn)
+    actions.appendChild(dismissBtn)
+
+    dialog.appendChild(title)
+    dialog.appendChild(desc)
+    dialog.appendChild(steps)
+    dialog.appendChild(actions)
+
+    overlay.appendChild(dialog)
+    overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove() })
+    document.body.appendChild(overlay)
+}
+
 const aiHighlightAnswer = async (quEl, btn) => {
     // Exclude the button's own text from the question string
     const clone = quEl.cloneNode(true)
@@ -340,6 +385,7 @@ const aiHighlightAnswer = async (quEl, btn) => {
         console.log('[RefinedJW AI] availability:', avail)
 
         if (avail === 'unavailable') {
+            showAISetupDialog()
             if (btn) {
                 btn.textContent = getLocale('aiUnavailable')
                 setTimeout(() => { btn.textContent = getLocale('aiAnswerBtn') }, 3000)
@@ -364,6 +410,7 @@ const aiHighlightAnswer = async (quEl, btn) => {
                 const highlighted = findAndHighlightText(p, answerText, 'yellow')
                 console.log('[RefinedJW AI] findAndHighlightText result:', highlighted, 'for:', answerText)
             }
+            posthog.capture('ai_answer')
         }
     } catch (err) {
         console.error('[RefinedJW AI] aiHighlightAnswer error:', err)
@@ -605,6 +652,7 @@ const initAIAnswerAllBtn = () => {
         btn.classList.remove('is-loading')
         btn.textContent = getLocale('aiAnswerAllDone')
         setTimeout(() => { btn.textContent = getLocale('aiAnswerAllBtn') }, 3000)
+        posthog.capture('ai_answer_all', { questions_count: questions.length })
     })
 
     if (DEBUG) {
@@ -636,12 +684,12 @@ const initAIAnswerAllBtn = () => {
 
 const openHintFrame = (holdingShift) => {
     HINT_FRAME.classList.add('open')
-    usageTracking(holdingShift ? 'open_hint_shift' : 'open_hint')
+    posthog.capture(holdingShift ? 'open_hint_shift' : 'open_hint')
 }
 
 const closeHintFrame = (releaseShift) => {
     HINT_FRAME.classList.remove('open')
-    usageTracking(releaseShift ? 'close_hint_shift' : 'close_hint')
+    posthog.capture(releaseShift ? 'close_hint_shift' : 'close_hint')
 
 }
 
@@ -1040,7 +1088,7 @@ ${text}
                 const intersector = new IntersectionObserver((entries) => {
                     entries.forEach(entry => {
                         if (entry.isIntersecting) {
-                            usageTracking('transcription_in_viewport')
+                            posthog.capture('transcription_in_viewport')
                         }
                     })
                 }, intersectorOptions)
@@ -1052,7 +1100,7 @@ ${text}
 
                 downloadButton.addEventListener('click', () => {
                     download(vtt, `${title.textContent}_subtitles.vtt`, 'text/vtt')
-                    usageTracking('download_subtitles')
+                    posthog.capture('download_subtitles')
                 })
 
                 const sentences = document.querySelectorAll('.jw-refined-transcription-sentence-clickable')
@@ -1070,7 +1118,7 @@ ${text}
 
                             jumpToTime(sentence.dataset.start)
                         }
-                        usageTracking('jump_to_time')
+                        posthog.capture('jump_to_time')
                     })
                 }
 
@@ -1202,27 +1250,26 @@ function createStopwatch(parent, id) {
         stopwatch = document.createElement('span')
         stopwatch.classList.add('badge', 'stopwatch')
         stopwatch.id = `stopwatch-${id}`
+        stopwatch.innerHTML = `⏱️ ${getLocale('start')}`
+        stopwatch.title = getLocale('startStopwatch')
+
+        stopwatch.addEventListener('click', (evt) => {
+            const el = evt.target
+            const content = el.innerHTML;
+            if (content.includes('⏱️')) {
+                stopwatches[id] = startStopwatch(el)
+                el.title = getLocale('stopStopwatch')
+            } else if (content.includes('⏹️')) {
+                clearInterval(stopwatches[id])
+                delete stopwatches[id]
+                el.innerHTML = content.replace('⏹️', '⏱️')
+                el.title = getLocale('startStopwatch')
+            }
+            posthog.capture('stopwatch')
+        })
     }
 
-    stopwatch.innerHTML = `⏱️ ${getLocale('start')}`
-    stopwatch.title = getLocale('startStopwatch')
-
     parent.appendChild(stopwatch)
-
-    stopwatch.addEventListener('click', (evt) => {
-        const el = evt.target
-        const content = el.innerHTML;
-        if (content.includes('⏱️')) {
-            stopwatches[id] = startStopwatch(el)
-            el.title = getLocale('stopStopwatch')
-        } else if (content.includes('⏹️')) {
-            clearInterval(stopwatches[id])
-            delete stopwatches[id]
-            el.innerHTML = content.replace('⏹️', '⏱️')
-            el.title = getLocale('startStopwatch')
-        }
-        usageTracking('stopwatch')
-    })
 }
 
 const startStopwatch = (el) => {
@@ -1248,44 +1295,193 @@ function addCommentTime(comment, id) {
     speechTimeElement.innerHTML = `${getLocale('estimatedTime')} ${speechTime}${getLocale('secondsShorter')}`
     const speechParent = document.querySelector(`#${id}`).parentElement
 
-    createStopwatch(speechParent, id)
-    speechParent.appendChild(speechTimeElement)
+    let row = document.querySelector(`#comment-time-row-${id}`)
+    if (!row) {
+        row = document.createElement('div')
+        row.id = `comment-time-row-${id}`
+        row.classList.add('refined-jw-comment-time-row')
+        speechParent.appendChild(row)
+    }
+
+    createStopwatch(row, id)
+    row.appendChild(speechTimeElement)
 
     if (speechTime > 29) {
         speechTimeElement.classList.add('refined-jw-speech-time-long')
         const summarizeBtn = document.createElement('span')
-        summarizeBtn.innerHTML = `✨ ${getLocale('summarize').toLowerCase()} <span class="badge free">${getLocale('free').toLowerCase()}</span>`
-        summarizeBtn.classList.add('refined-jw-speech-time-summarize')
-        summarizeBtn.addEventListener('click', summarizeComment)
+        summarizeBtn.textContent = getLocale('summarize').toLowerCase()
+        summarizeBtn.classList.add('badge', 'jw-refined-ai-comment-btn')
         summarizeBtn.setAttribute('data-textarea-id', id)
+        summarizeBtn.addEventListener('click', summarizeComment)
         speechTimeElement.appendChild(summarizeBtn)
     }
+
+    const commentBtn = document.createElement('span')
+    commentBtn.textContent = getLocale('aiComment')
+    commentBtn.classList.add('badge', 'jw-refined-ai-comment-btn')
+    commentBtn.setAttribute('data-textarea-id', id)
+    commentBtn.addEventListener('click', commentWithAI)
+    speechTimeElement.appendChild(commentBtn)
 
 
 }
 
-const summarizeComment = (e) => {
-    const taId = e.target.dataset.textareaId
-    const element = document.querySelector(`#${taId}`)
-    const {summary} = summarizeText(element.value)
-
-    const cleanSummary = clearUnmatchedBrackets(summary).trim()
-
-    let summarizedElement = document.querySelector(`#data-summarized-${taId}`)
-
-    if (!summarizedElement) {
-        summarizedElement = document.createElement('blockquote')
-        summarizedElement.id = `data-summarized-${taId}`
-        summarizedElement.classList.add(`refined-jw-summarized`)
-        summarizedElement.setAttribute('data-textarea-id', taId)
+const showAIOutput = (taId, text, regenerateFn) => {
+    const parent = document.querySelector(`#${taId}`).parentElement
+    let el = document.querySelector(`#data-ai-output-${taId}`)
+    if (!el) {
+        el = document.createElement('blockquote')
+        el.id = `data-ai-output-${taId}`
+        el.classList.add('refined-jw-summarized', 'refined-jw-ai-output')
+        parent.appendChild(el)
     }
 
-    const newSpeechTime = calculateSpeechTime(cleanSummary);
+    const textEl = document.createElement('p')
+    textEl.classList.add('refined-jw-ai-output-text')
+    textEl.textContent = text
 
-    summarizedElement.innerHTML = cleanSummary + `<span class="refined-jw-speech-time">${getLocale('newCommentTime').toLowerCase()} ${newSpeechTime}${getLocale('secondsShorter')}</span>`
-    document.querySelector(`#${taId}`).parentElement.appendChild(summarizedElement)
+    const actionsEl = document.createElement('div')
+    actionsEl.classList.add('refined-jw-ai-output-actions')
 
-    usageTracking('summarize')
+    const replaceBtn = document.createElement('button')
+    replaceBtn.textContent = getLocale('aiReplace')
+    replaceBtn.addEventListener('click', () => {
+        const ta = document.querySelector(`#${taId}`)
+        ta.value = text
+        ta.dispatchEvent(new Event('input'))
+        el.remove()
+        posthog.capture('ai_accept')
+    })
+
+    const regenBtn = document.createElement('button')
+    regenBtn.textContent = getLocale('aiRegenerate')
+    regenBtn.addEventListener('click', () => {
+        if (regenBtn.classList.contains('is-loading')) return
+
+        const existing = el.querySelector('.refined-jw-regen-prompt')
+        if (existing) { existing.remove(); return }
+
+        const promptRow = document.createElement('div')
+        promptRow.classList.add('refined-jw-regen-prompt')
+
+        const promptInput = document.createElement('input')
+        promptInput.type = 'text'
+        promptInput.placeholder = getLocale('aiRegeneratePromptPlaceholder')
+
+        const submitBtn = document.createElement('button')
+        submitBtn.textContent = '→'
+
+        const doRegen = async () => {
+            if (regenBtn.classList.contains('is-loading')) return
+            const instruction = promptInput.value.trim()
+            regenBtn.classList.add('is-loading')
+            const origText = regenBtn.textContent
+            regenBtn.textContent = '…'
+            promptRow.remove()
+
+            let newText
+            if (instruction) {
+                const ta = document.querySelector(`#${taId}`)
+                newText = await RefinedJWAI.regenerateWithInstruction(
+                    ta ? ta.value : '', text, instruction
+                )
+                if (newText) posthog.capture('ai_regenerate_with_input')
+            } else {
+                newText = await regenerateFn()
+                if (newText) posthog.capture('ai_regenerate')
+            }
+
+            if (newText) {
+                showAIOutput(taId, newText.trim(), regenerateFn)
+            } else {
+                regenBtn.classList.remove('is-loading')
+                regenBtn.textContent = origText
+            }
+        }
+
+        submitBtn.addEventListener('click', doRegen)
+        promptInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') doRegen()
+            if (e.key === 'Escape') promptRow.remove()
+        })
+
+        promptRow.append(promptInput, submitBtn)
+        el.appendChild(promptRow)
+        promptInput.focus()
+    })
+
+    const closeBtn = document.createElement('button')
+    closeBtn.textContent = getLocale('aiDismiss')
+    closeBtn.classList.add('refined-jw-ai-output-close')
+    closeBtn.addEventListener('click', () => { el.remove(); posthog.capture('ai_dismiss') })
+
+    actionsEl.append(replaceBtn, regenBtn, closeBtn)
+    el.replaceChildren(textEl, actionsEl)
+}
+
+const summarizeComment = async (e) => {
+    const btn = e.target
+    const taId = btn.dataset.textareaId
+    const element = document.querySelector(`#${taId}`)
+
+    if (btn.classList.contains('is-loading')) return
+    btn.classList.add('is-loading')
+    const originalText = btn.textContent
+    btn.textContent = '…'
+
+    const doSummarize = async () => {
+        const avail = await RefinedJWAI.checkAvailability()
+        if (avail === 'unavailable') {
+            showAISetupDialog()
+            const {summary} = summarizeText(element.value)
+            return clearUnmatchedBrackets(summary).trim()
+        }
+        const aiResult = await RefinedJWAI.summarize(element.value)
+        if (aiResult) return aiResult.trim()
+        const {summary} = summarizeText(element.value)
+        return clearUnmatchedBrackets(summary).trim()
+    }
+
+    try {
+        const result = await doSummarize()
+        showAIOutput(taId, result, doSummarize)
+        posthog.capture('summarize')
+    } finally {
+        btn.classList.remove('is-loading')
+        btn.textContent = originalText
+    }
+}
+
+const commentWithAI = async (e) => {
+    const btn = e.target
+    const taId = btn.dataset.textareaId
+    const element = document.querySelector(`#${taId}`)
+    const text = element.value.trim()
+    if (!text || btn.classList.contains('is-loading')) return
+
+    btn.classList.add('is-loading')
+    const originalText = btn.textContent
+    btn.textContent = '…'
+
+    const doComment = async () => {
+        const avail = await RefinedJWAI.checkAvailability()
+        if (avail === 'unavailable') {
+            showAISetupDialog()
+            return null
+        }
+        return RefinedJWAI.expandNote(element.value.trim())
+    }
+
+    try {
+        const result = await doComment()
+        if (result) {
+            showAIOutput(taId, result.trim(), doComment)
+            posthog.capture('ai_comment')
+        }
+    } finally {
+        btn.classList.remove('is-loading')
+        btn.textContent = originalText
+    }
 }
 
 function clearUnmatchedBrackets(str) {
@@ -1395,7 +1591,7 @@ const handleShortcut = (event) => {
 
         const isMockEvent = !!event.mock
 
-        usageTracking('shortcut', {keys, description, result, isMockEvent})
+        posthog.capture('shortcut', {keys, description, result, isMockEvent})
 
         return result
     }
@@ -2673,7 +2869,7 @@ const updateSelectionsInLocalStorage = (id, uri = window.location.href) => {
     userData[key] = currentData
     localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(userData))
 
-    usageTracking('delete_selection')
+    posthog.capture('delete_selection')
 }
 
 const uriToKey = (uri) => {
@@ -2744,7 +2940,7 @@ const addToLocalStorage = (type, value, uri = window.location.href) => {
     const trackedEvents = ['comment', 'selection']
 
     if (trackedEvents.includes(type)) {
-        usageTracking(type)
+        posthog.capture(type)
     }
 }
 
@@ -2863,7 +3059,7 @@ chrome.runtime.onMessage.addListener(
     (request, sender, sendResponse) => {
         if (request.type === 'request_shortcuts') {
             sendResponse(SHORTCUTS);
-            usageTracking('request_shortcuts')
+            posthog.capture('request_shortcuts')
         }
         if (request.type === 'url_changed') {
             initJWRefinedDeferred(500)
@@ -2875,7 +3071,7 @@ chrome.runtime.onMessage.addListener(
             if (isJW) {
                 extractJwQuotes(window.document)
             }
-            usageTracking('extract_request')
+            posthog.capture('extract_request')
         }
         return true;
     }

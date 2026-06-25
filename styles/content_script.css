@@ -153,14 +153,21 @@ kbd {
     padding-left: .5em !important;
 }
 
+.refined-jw-comment-time-row {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    margin-top: 0.25em;
+}
+
 .refined-jw-speech-time {
     text-align: right;
     font-size: 80%;
-    margin-top: 0.25em;
-    width: fit-content;
+    flex: 1;
     color: var(--gray);
     user-select: none;
     display: flex;
+    align-items: center;
     gap: .5em;
     justify-content: end;
 }
@@ -169,14 +176,6 @@ kbd {
     color: var(--dark-yellow);
 }
 
-.refined-jw-speech-time-summarize {
-    color: var(--link-color);
-    cursor: pointer;
-}
-
-.refined-jw-speech-time-summarize:hover {
-    text-decoration: underline;
-}
 
 .badge {
 
@@ -207,11 +206,9 @@ kbd {
         pointer-events: auto !important;
         cursor: pointer;
         text-transform: none !important;
-        margin-right: auto !important;
-        margin-left: 0 !important;
-        margin-top: .25rem !important;
         padding: .2rem !important;
-        display: inline !important;
+        flex-shrink: 0;
+        color: var(--text-color) !important;
     }
 
     background-color: var(--bg-color);
@@ -236,6 +233,85 @@ kbd {
     padding: 1em;
     line-height: 1.2em;
     border-radius: 3px;
+}
+
+.refined-jw-ai-output {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75em;
+}
+
+.refined-jw-ai-output-text {
+    margin: 0;
+    line-height: 1.4em;
+}
+
+.refined-jw-ai-output-actions {
+    display: flex;
+    gap: 0.5em;
+    align-items: center;
+
+    button {
+        background: none;
+        border: 1px solid currentColor;
+        border-radius: 3px;
+        color: inherit;
+        cursor: pointer;
+        font-size: 0.8em;
+        padding: 0.2em 0.6em;
+        opacity: 0.7;
+
+        &:hover {
+            opacity: 1;
+        }
+    }
+
+    .refined-jw-ai-output-close {
+        margin-left: auto;
+    }
+}
+
+.refined-jw-regen-prompt {
+    display: flex;
+    gap: 0.4em;
+    align-items: center;
+
+    input {
+        flex: 1;
+        background: none;
+        border: 1px solid currentColor;
+        border-radius: 3px;
+        color: inherit;
+        font-size: 0.8em;
+        padding: 0.2em 0.5em;
+        opacity: 0.8;
+        outline: none;
+
+        &:focus { opacity: 1; }
+        &::placeholder { opacity: 0.5; }
+    }
+
+    button {
+        background: none;
+        border: 1px solid currentColor;
+        border-radius: 3px;
+        color: inherit;
+        cursor: pointer;
+        font-size: 0.8em;
+        padding: 0.2em 0.6em;
+        opacity: 0.7;
+
+        &:hover { opacity: 1; }
+    }
+}
+
+.badge.jw-refined-ai-comment-btn {
+    --bg-color: var(--link-color);
+    cursor: pointer;
+    pointer-events: auto;
+    margin-top: .25rem !important;
+    padding: .2rem .5em !important;
+    display: inline !important;
 }
 
 .gen-field {
@@ -849,4 +925,88 @@ p.qu:focus-within .jw-refined-ai-answer-btn {
     font-size: 0.7em;
     user-select: none;
 
+}
+
+/* AI Setup Dialog */
+.jw-refined-ai-setup-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.55);
+    z-index: 9999999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.jw-refined-ai-setup-dialog {
+    background: var(--box-color);
+    color: var(--text-color);
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    max-width: min(90vw, 530px);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
+    font-family: inherit;
+}
+
+.jw-refined-ai-setup-title {
+    font-size: 1.05rem;
+    font-weight: 700;
+    margin: 0 0 0.6rem;
+}
+
+.jw-refined-ai-setup-desc {
+    font-size: 0.88rem;
+    line-height: 1.5;
+    margin: 0 0 1rem;
+    opacity: 0.85;
+}
+
+.jw-refined-ai-setup-steps {
+    font-size: 0.85rem;
+    line-height: 1.65;
+    margin: 0 0 1.25rem;
+    padding-left: 1.3rem;
+
+    li {
+        margin-bottom: 0.4rem;
+    }
+
+    code {
+        font-family: monospace;
+        font-size: 0.82em;
+        background: rgba(128, 128, 128, 0.15);
+        padding: 0.1em 0.35em;
+        border-radius: 3px;
+        user-select: all;
+    }
+}
+
+.jw-refined-ai-setup-actions {
+    display: flex;
+    gap: 0.6rem;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+
+    button {
+        border: 1px solid currentColor;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 0.85rem;
+        padding: 0.35em 0.9em;
+        background: none;
+        color: inherit;
+        opacity: 0.75;
+
+        &:hover {
+            opacity: 1;
+        }
+
+        &.jw-refined-ai-setup-btn-primary {
+            background: var(--link-color);
+            border-color: var(--link-color);
+            color: #fff;
+            opacity: 1;
+            font-weight: 600;
+        }
+    }
 }

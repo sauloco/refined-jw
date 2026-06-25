@@ -63,7 +63,7 @@
     "message": "Загрузить как субтитры"
   },
   "start": {
-    "message": "Начать"
+    "message": "REHEARSE"
   },
   "startStopwatch": {
     "message": "Запустить секундомер"
@@ -202,5 +202,32 @@
   },
   "aiAnswerAllDone": {
     "message": "Готово"
+  },
+  "aiComment": {
+    "message": "Комментарий"
+  },
+  "aiReplace": {
+    "message": "Принять"
+  },
+  "aiDismiss": {
+    "message": "Закрыть"
+  },
+  "aiRegenerate": {
+    "message": "Повторить"
+  },
+  "aiRegeneratePromptPlaceholder": {
+    "message": "Что сделать по-другому? (необязательно)"
+  },
+  "aiSetupTitle": {
+    "message": "Включить ИИ на устройстве"
+  },
+  "aiSetupDesc": {
+    "message": "Refined JW использует Gemini Nano — встроенный ИИ Chrome — для учебных заметок, ответов и краткого изложения. Требуется одноразовая настройка в Chrome."
+  },
+  "aiSetupDismiss": {
+    "message": "Не сейчас"
+  },
+  "aiSetupDontShow": {
+    "message": "Больше не показывать"
   }
 }

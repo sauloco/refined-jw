@@ -17,7 +17,8 @@ const RefinedJWAI = (() => {
     const SYSTEM_PROMPT =
         'You are a concise study assistant for JW.org content. ' +
         'Help users understand Bible-based articles from jw.org and wol.jw.org. ' +
-        'Keep every response short and practical.'
+        'Keep every response short and practical. ' +
+        'Never use markdown formatting — no bold, italics, headers, or bullet points. Plain text only.'
 
     const SUPPORTED_LANGUAGES = new Set(['en', 'de', 'es', 'fr', 'ja'])
 
@@ -29,6 +30,10 @@ const RefinedJWAI = (() => {
     // ---------------------------------------------------------------------------
     // Availability
     // ---------------------------------------------------------------------------
+
+    const capture = (event, props) => {
+        if (typeof posthog !== 'undefined') posthog.capture(event, props)
+    }
 
     const checkAvailability = async () => {
         // Only cache stable terminal states — 'downloading'/'after-download' are transient
@@ -42,6 +47,7 @@ const RefinedJWAI = (() => {
         } catch {
             _availability = 'unavailable'
         }
+        if (_availability === 'readily') capture('ai_service_ready')
         return _availability
     }
 
@@ -94,10 +100,12 @@ const RefinedJWAI = (() => {
             _session = session
             _creating = null
             console.log('[RefinedJW AI] session created successfully')
+            capture('ai_service_initialized')
             return session
         }).catch(err => {
             console.error('[RefinedJW AI] failed to create session:', err)
             _creating = null
+            capture('ai_service_failed', { error: err?.message })
             return null
         })
 
@@ -172,6 +180,13 @@ const RefinedJWAI = (() => {
         }
     }
 
+    const LANG_NAMES = { en: 'English', es: 'Spanish', de: 'German', fr: 'French', it: 'Italian', pt: 'Portuguese', ru: 'Russian', ja: 'Japanese', ko: 'Korean', zh: 'Chinese' }
+
+    const getPageLangName = () => {
+        const code = (document.documentElement.lang || window.location.pathname.split('/')[1] || 'en').split('-')[0].toLowerCase()
+        return LANG_NAMES[code] || null
+    }
+
     /**
      * Summarize text. Tries the dedicated Summarizer API first, falls back to
      * the Prompt API, returns null if neither is available.
@@ -179,12 +194,19 @@ const RefinedJWAI = (() => {
      * @returns {Promise<string|null>}
      */
     const summarize = async (text) => {
+        const langName = getPageLangName()
+        const langInstruction = langName ? ` Respond in ${langName}.` : ''
+
         // Try dedicated Summarizer API first
         try {
             if (typeof Summarizer !== 'undefined') {
                 const avail = await Summarizer.availability()
                 if (avail !== 'unavailable') {
-                    const summarizer = await Summarizer.create({ type: 'tldr', length: 'short' })
+                    const summarizer = await Summarizer.create({
+                        type: 'tldr',
+                        length: 'short',
+                        sharedContext: langName ? `The text is in ${langName}. Respond in ${langName}.` : undefined,
+                    })
                     const result = await summarizer.summarize(text)
                     summarizer.destroy()
                     return result
@@ -200,7 +222,7 @@ const RefinedJWAI = (() => {
 
         try {
             return await session.prompt(
-                `Summarize the following text in 1-2 sentences:\n\n${text}`
+                `Summarize the following text in 1-2 sentences.${langInstruction}\n\n${text}`
             )
         } catch (err) {
             console.warn('RefinedJWAI: summarize via Prompt API failed', err)
@@ -239,6 +261,48 @@ const RefinedJWAI = (() => {
             return results.length > 0 ? results : null
         } catch (err) {
             console.error('[RefinedJW AI] findAnswer: session.prompt() failed:', err)
+            return null
+        }
+    }
+
+    /**
+     * Use the user's typed note as a prompt to generate a polished study comment.
+     * @param {string} userInput - the user's raw note/thought from the textarea
+     * @returns {Promise<string|null>}
+     */
+    const expandNote = async (userInput) => {
+        const langName = getPageLangName()
+        const langInstruction = langName ? ` Respond in ${langName}.` : ''
+        const session = await getSession()
+        if (!session) return null
+        try {
+            return await session.prompt(
+                `Rewrite the following rough study note as a polished, concise study comment (2-3 sentences) that captures the key spiritual thought.${langInstruction} Return only the rewritten comment — no introduction, no explanation, no preamble:\n\n"${userInput}"`
+            )
+        } catch (err) {
+            console.warn('RefinedJWAI: expandNote failed', err)
+            return null
+        }
+    }
+
+    /**
+     * Regenerate the AI output following a user-supplied instruction.
+     * @param {string} originalText - the source note/text from the textarea
+     * @param {string} currentOutput - the AI output currently shown
+     * @param {string} instruction - what the user wants to change
+     * @returns {Promise<string|null>}
+     */
+    const regenerateWithInstruction = async (originalText, currentOutput, instruction) => {
+        const langName = getPageLangName()
+        const langInstruction = langName ? ` Respond in ${langName}.` : ''
+        const session = await getSession()
+        if (!session) return null
+        try {
+            return await session.prompt(
+                `Original note:\n"${originalText}"\n\nCurrent output:\n"${currentOutput}"\n\nInstruction: ${instruction}\n\nRewrite the output following the instruction.${langInstruction} Return only the rewritten result — no preamble:`
+            )
+        } catch (err) {
+            console.warn('RefinedJWAI: regenerateWithInstruction failed', err)
             return null
         }
     }
@@ -285,6 +349,8 @@ const RefinedJWAI = (() => {
         generateComment,
         generateCommentStreaming,
         summarize,
+        expandNote,
+        regenerateWithInstruction,
         findAnswer,
         suggestHighlights,
     }
