@@ -63,7 +63,7 @@
     "message": "Descarregar como legendas"
   },
   "start": {
-    "message": "Iniciar"
+    "message": "REHEARSE"
   },
   "startStopwatch": {
     "message": "Iniciar cronómetro"
@@ -202,5 +202,32 @@
   },
   "aiAnswerAllDone": {
     "message": "Concluído"
+  },
+  "aiComment": {
+    "message": "Comentar"
+  },
+  "aiReplace": {
+    "message": "Aceitar"
+  },
+  "aiDismiss": {
+    "message": "Descartar"
+  },
+  "aiRegenerate": {
+    "message": "Regenerar"
+  },
+  "aiRegeneratePromptPlaceholder": {
+    "message": "O que deve fazer de diferente? (opcional)"
+  },
+  "aiSetupTitle": {
+    "message": "Ativar IA no dispositivo"
+  },
+  "aiSetupDesc": {
+    "message": "O Refined JW usa o Gemini Nano, a IA integrada do Chrome, para notas de estudo, respostas e resumos. É necessária uma configuração única no Chrome."
+  },
+  "aiSetupDismiss": {
+    "message": "Agora não"
+  },
+  "aiSetupDontShow": {
+    "message": "Não mostrar novamente"
   }
 }
